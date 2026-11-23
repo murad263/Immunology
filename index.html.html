@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тест по иммунологии</title>
+<style>
+  :root{
+    --bg:#0a0a0a; --panel:#141414; --panel2:#1f1f1f; --border:#2a2a2a;
+    --text:#e8e8e8; --muted:#888; --accent:#4a9eff; --good:#2ecc71; --bad:#e74c3c; --star:#f1c40f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+  aside{
+    width:280px;flex-shrink:0;background:var(--panel);padding:16px;display:flex;flex-direction:column;gap:14px;
+    position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--border)
+  }
+  aside h2{margin:0;font-size:16px;color:var(--accent)}
+  .stat{background:var(--panel2);padding:10px;border-radius:8px;font-size:13px;line-height:1.7;border:1px solid var(--border)}
+  .stat b{color:var(--accent)}
+  .fav-list{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto}
+  .fav-item{background:var(--panel2);padding:8px;border-radius:6px;font-size:12px;display:flex;justify-content:space-between;gap:6px;cursor:pointer;border:1px solid var(--border)}
+  .fav-item:hover{border-color:var(--accent)}
+  .fav-item button{background:none;border:none;color:var(--bad);cursor:pointer;font-size:14px}
+  .btns{display:flex;flex-direction:column;gap:8px}
+  button.act{background:var(--accent);color:#000;border:none;padding:10px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px}
+  button.act:hover{filter:brightness(1.1)}
+  button.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
+  button.ghost:hover{background:#2a2a2a}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .copyright{font-size:12px;color:var(--muted);margin-top:auto;text-align:center;padding-top:10px;border-top:1px solid var(--border)}
+
+  main{flex:1;padding:24px;max-width:860px;margin:0 auto;display:flex;flex-direction:column}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:10px;flex-wrap:wrap}
+  header h1{font-size:20px;margin:0;color:var(--accent)}
+  .progress-text{font-size:14px;color:var(--muted)}
+  .timer{font-size:16px;font-variant-numeric:tabular-nums;color:var(--accent);font-weight:600}
+  .timer.warn{color:var(--bad)}
+
+  .card{background:var(--panel);border-radius:12px;padding:22px;border:1px solid var(--border)}
+  .q-num{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .q-text{font-size:18px;margin-bottom:18px;line-height:1.45}
+  .opt{
+    display:block;width:100%;text-align:left;background:var(--panel2);color:var(--text);border:1px solid var(--border);
+    padding:13px 15px;border-radius:9px;margin-bottom:9px;cursor:pointer;font-size:15px;transition:.12s;
+  }
+  .opt:hover:not(.disabled){border-color:var(--accent)}
+  .opt.correct{background:rgba(46,204,113,.18);border-color:var(--good);color:#b8f5d0}
+  .opt.wrong{background:rgba(231,76,60,.18);border-color:var(--bad);color:#f5c0b8}
+  .opt.disabled{cursor:default;opacity:.95}
+  .star-btn{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;float:right;margin-left:8px;line-height:1}
+  .star-btn.active{color:var(--star)}
+
+  .actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .actions button{flex:1;min-width:130px}
+  .show-answer{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
+  .show-answer:hover{background:#2a2a2a}
+
+  .result{text-align:center;padding:20px}
+  .result .grade{font-size:52px;font-weight:700;color:var(--accent);margin:10px 0}
+  .result .pct{font-size:20px;color:var(--muted);margin-bottom:20px}
+  .result .rows{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin-bottom:24px;font-size:15px}
+  .result .rows div{background:var(--panel2);padding:10px 16px;border-radius:8px;border:1px solid var(--border)}
+  .result .rows b{color:var(--accent)}
+  .result .row-good b{color:var(--good)}
+  .result .row-bad b{color:var(--bad)}
+
+  .footer-note{text-align:center;color:var(--muted);font-size:12px;margin-top:auto;padding-top:24px}
+  .empty{color:var(--muted);font-size:12px}
+  .hidden{display:none!important}
+
+  @media(max-width:800px){body{flex-direction:column}aside{width:100%;height:auto;position:static}main{padding:14px}}
+</style>
+</head>
+<body>
+
+<aside>
+  <h2>Иммунология</h2>
+
+  <div class="stat" id="stats">
+    Отвечено: <b id="sAns">0</b> / <span id="sTot">0</span><br>
+    Верно: <b id="sGood" style="color:var(--good)">0</b><br>
+    Неверно: <b id="sBad" style="color:var(--bad)">0</b><br>
+    Избранное: <b id="sFav">0</b>
+  </div>
+
+  <div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">★ Избранное</div>
+    <div class="fav-list" id="favList"><div class="empty">Пока пусто</div></div>
+  </div>
+
+  <div class="btns">
+    <button class="act ghost" id="restartBtn">Пройти заново</button>
+    <button class="act ghost" id="errorsBtn">Повторить ошибки</button>
+    <button class="act ghost" id="favBtn">Только избранное</button>
+    <button class="act ghost" id="resetBtn">Сбросить прогресс</button>
+  </div>
+
+  <div class="copyright">© 2026 Murad Khibievich</div>
+</aside>
+
+<main>
+  <header>
+    <h1>Тест по иммунологии</h1>
+    <div class="progress-text" id="progressText">0 / 0</div>
+    <div class="timer" id="timer">00:00</div>
+  </header>
+
+  <div id="quizArea"></div>
+
+  <div class="footer-note">© 2026 Murad Khibievich</div>
+</main>
+
+<script>
+/* ============================================================
+   ДАННЫЕ ТЕСТОВ
+   ============================================================ */
+const RAW = `Иммунитет — это
+− способ питания клеток
+− процесс свёртывания крови
++ способность организма защищаться от генетически чужеродных агентов и поддерживать постоянство внутренней среды
+− реакция только на бактерии
+
+Врождённый (неспецифический) иммунитет характеризуется
++ немедленной готовностью, отсутствием специфичности и памяти
+− формированием клеток памяти
+− медленным развитием при первой встрече
+− синтезом специфических антител
+
+Адаптивный (приобретённый) иммунитет характеризуется
+− отсутствием специфичности
+− врождённой готовностью без обучения
+− независимостью от лимфоцитов
++ специфичностью, формированием памяти и более быстрым вторичным ответом
+
+Иммунитет после перенесённого инфекционного заболевания является
+− искусственным активным
+− искусственным пассивным
++ естественным активным
+− видовым
+
+Иммунитет новорождённого за счёт материнских IgG, полученных через плаценту, — это
++ естественный пассивный
+− искусственный активный
+− искусственный пассивный
+− видовой
+
+Иммунитет после вакцинации является
+− естественным пассивным
++ искусственным активным
+− естественным активным
+− видовым
+
+К механическим (барьерным) факторам неспецифической защиты относятся
+− интерфероны
++ неповреждённые кожа и слизистые оболочки, мукоцилиарный клиренс
+− антитела
+− Т-лимфоциты
+
+Лизоцим слюны относится к
+− специфическим факторам защиты
+− антителам
++ гуморальным факторам неспецифической защиты
+− клеточным факторам адаптивного иммунитета
+
+К клеточным факторам врождённого иммунитета относятся
+− плазматические клетки
++ фагоциты (нейтрофилы, макрофаги) и NK-клетки
+− только В-лимфоциты
+− Т-хелперы
+
+К центральным органам иммунной системы относятся
+− селезёнка и лимфатические узлы
+− миндалины и пейеровы бляшки
++ красный костный мозг и тимус
+− слюнные железы
+
+Общим маркёром зрелых Т-лимфоцитов является
++ CD3
+− CD19
+− CD56
+− CD14
+
+NK-клетки осуществляют
+− синтез антител
+− презентацию антигена
++ уничтожение опухолевых и вирус-инфицированных клеток без предварительной сенсибилизации
+− выработку гистамина
+
+Интерфероны I типа являются фактором защиты прежде всего против
+− гельминтов
+− внеклеточных бактерий
++ вирусов
+− грибов
+
+Основным фактором местного (мукозального) иммунитета полости рта среди антител является
+− IgG сыворотки
+− IgM
++ секреторный IgA
+− IgE
+
+Видовой (наследственный) иммунитет — это:
++ невосприимчивость одного биологического вида к возбудителям болезней другого вида
+− иммунитет после вакцинации
+− иммунитет после болезни
+− пассивный иммунитет
+
+Защиту организма от генетически чужеродных агентов обеспечивает
+− эндокринная система
++ иммунная система
+− только нервная система
+− система крови вне иммунитета
+
+По происхождению различают иммунитет
+− только клеточный и гуморальный
+− только активный
++ врождённый и приобретённый (адаптивный)
+− только местный
+
+Приобретённый иммунитет при введении готовых антител (сыворотки, иммуноглобулина) является
+− естественным активным
+− искусственным активным
+− видовым
++ искусственным пассивным
+
+К периферическим органам иммунной системы относятся
+− тимус и костный мозг
++ селезёнка, лимфатические узлы, лимфоидная ткань слизистых
+− только тимус
+− печень и почки
+
+Созревание В-лимфоцитов у взрослого человека происходит в
+− тимусе
++ красном костном мозге
+− селезёнке
+− лимфатических узлах
+
+К гуморальным факторам неспецифической (врождённой) защиты относятся
+− антитела и Т-клеточный рецептор
++ лизоцим, система комплемента, интерфероны
+− только иммуноглобулины
+− CD-маркёры
+
+Нормальная микрофлора полости рта и кишечника выполняет защитную функцию за счёт
+− синтеза антител
+− активации комплемента
++ колонизационной резистентности (конкуренции с патогенами)
+− фагоцитоза
+
+Опсонизация — это
+− прямой лизис бактерий
+− склеивание эритроцитов
+− блокада рецепторов
++ усиление фагоцитоза за счёт покрытия микроба антителами или C3b
+
+Маркёром Т-хелперов является:
+− CD8
++ CD4
+− CD19
+− CD56
+
+Специфичность и иммунологическая память характерны для:
+− врождённого иммунитета
+− барьерных факторов
++ адаптивного (приобретённого) иммунитета
+− системы комплемента
+
+Воспаление как защитная реакция направлено на:
+− распространение возбудителя
++ локализацию и уничтожение повреждающего агента и восстановление ткани
+− подавление фагоцитоза
+− синтез IgE
+
+К факторам местного иммунитета полости рта относятся:
++ секреторный IgA, лизоцим слюны, лактоферрин
+− только IgG сыворотки
+− только Т-киллеры
+− эритроциты
+
+Иммунитет, приобретённый естественным путём после перенесённой инфекции, является:
+− искусственным
+− пассивным
+− видовым
++ активным
+
+Фагоцитоз как фактор защиты впервые был описан:
+− Л. Пастером
++ И. И. Мечниковым
+− П. Эрлихом
+− Э. Дженнером
+
+Самыми многочисленными лейкоцитами периферической крови взрослого человека являются:
+− лимфоциты
+− моноциты
++ нейтрофилы
+− эозинофилы
+
+Врождённый иммунитет — это защита, которая:
+− формируется только после болезни
++ есть с рождения и срабатывает сразу
+− требует вакцинации
+− зависит от антител
+
+Фагоцитоз — это:
++ захват и переваривание микробов клеткой
+− выработка антител
+− свёртывание крови
+− синтез гистамина
+
+Главные клетки-фагоциты:
+− эритроциты
+− тромбоциты
++ нейтрофилы и макрофаги
+− плазматические клетки
+
+Система комплемента — это:
+− вид лейкоцитов
++ группа белков крови, помогающих уничтожать микробы
+− гормоны
+− антитела
+
+Один из эффектов комплемента:
++ разрушение (лизис) микробной клетки
+− свёртывание крови
+− перенос кислорода
+− синтез инсулина
+
+Воспаление сопровождается:
+− только зудом
+− снижением температуры
++ покраснением, отёком, болью и повышением температуры
+− отсутствием изменений
+
+Лизоцим разрушает:
+− вирусы
++ клеточную стенку бактерий
+− эритроциты
+− собственные клетки
+
+Интерфероны защищают прежде всего от:
+− бактерий
++ вирусов
+− гельминтов
+− грибов
+
+Распознавание микробов во врождённом иммунитете происходит с помощью рецепторов:
+− инсулиновых
++ TLR (образраспознающих)
+− антител
+− гормональных
+
+Повышение температуры (лихорадка) при инфекции:
++ помогает защите организма
+− всегда вредно
+− не влияет на микробы
+− снижает иммунитет
+
+Барьерную защиту обеспечивают:
+− эритроциты
+− тромбоциты
++ кожа и слизистые оболочки
+− гормоны
+
+Макрофаги образуются из:
+− лимфоцитов
++ моноцитов
+− эритроцитов
+− тромбоцитов
+
+Цитокины — это:
++ белки, через которые клетки управляют иммунитетом
+− антитела
+− гормоны поджелудочной железы
+− ферменты желудка
+
+Белок острой фазы воспаления:
+− гемоглобин
++ С-реактивный белок
+− инсулин
+− альбумин
+
+В слюне антибактериальное действие оказывает:
++ лизоцим
+− инсулин
+− гемоглобин
+− адреналин
+
+Факторы врождённого иммунитета работают:
+− только после прививки
++ быстро и против многих микробов сразу
+− только против вирусов
+− медленно и строго специфично
+
+К фагоцитам относятся:
++ нейтрофилы и макрофаги
+− эритроциты
+− тромбоциты
+− плазматические клетки
+
+NK-клетки уничтожают:
+− только бактерии
++ опухолевые и заражённые вирусом клетки
+− эритроциты
+− антитела
+
+Комплемент может:
++ разрушать микробы и усиливать фагоцитоз
+− переносить кислород
+− свёртывать кровь
+− вырабатывать инсулин
+
+Какой признак НЕ относится к воспалению:
+− покраснение
+− отёк
+− боль
++ понижение температуры
+
+Интерферон вырабатывается в ответ на:
++ вирусную инфекцию
+− переедание
+− анемию
+− перелом
+
+Кожа и слизистые — это защита:
+− специфическая
++ барьерная (неспецифическая)
+− гуморальная адаптивная
+− клеточная адаптивная
+
+Лизоцим содержится в:
++ слюне, слезах, слизи
+− костях
+− только в крови
+− мышцах
+
+Фагоцитоз начинается с:
+− переваривания
++ приближения фагоцита к микробу
+− деления клетки
+− синтеза антител
+
+Отёк губ и языка при наследственном ангионевротическом отёке связан с нарушением:
++ системы комплемента
+− эритроцитов
+− тромбоцитов
+− инсулина
+
+Повышение С-реактивного белка указывает на:
+− аллергию
++ воспаление
+− анемию
+− норму
+
+Клетки, выделяющие гистамин при воспалении и аллергии:
+− эритроциты
+− нейтрофилы
++ тучные клетки
+− тромбоциты
+
+«Респираторный взрыв» в фагоците нужен для:
+− дыхания человека
++ уничтожения микроба активными формами кислорода
+− свёртывания крови
+− синтеза антител
+
+Воспаление — это реакция:
++ защитная
+− только вредная
+− не связанная с иммунитетом
+− всегда аллергическая
+
+К врождённому иммунитету НЕ относятся:
+− фагоцитоз
+− комплемент
++ специфические антитела и память
+− лизоцим
+
+Антиген — это:
++ вещество, которое организм распознаёт как чужое и на которое отвечает иммунитет
+− вид лейкоцита
+− гормон
+− фермент
+
+Антитела вырабатывают:
+− эритроциты
++ плазматические клетки (из В-лимфоцитов)
+− нейтрофилы
+− тромбоциты
+
+Главную роль в клеточном иммунитете играют:
++ Т-лимфоциты
+− эритроциты
+− тромбоциты
+− тучные клетки
+
+Молекулы MHC (HLA) нужны для:
+− переноса кислорода
++ представления антигена Т-лимфоцитам
+− свёртывания крови
+− синтеза гормонов
+
+Антиген Т-лимфоциту представляют:
+− эритроциты
++ антигенпрезентирующие клетки (дендритные, макрофаги)
+− тромбоциты
+− мышечные клетки
+
+Самые мощные антигенпрезентирующие клетки:
++ дендритные клетки
+− эритроциты
+− тромбоциты
+− нейтрофилы
+
+Т-хелперы помогают:
+− только свёртыванию крови
++ активировать В-лимфоциты и другие клетки иммунитета
+− переносу кислорода
+− пищеварению
+
+При первой встрече с антигеном иммунный ответ:
+− быстрый и сильный
++ медленный, антител мало
+− отсутствует
+− только клеточный
+
+При повторной встрече с тем же антигеном ответ:
++ быстрый и сильный за счёт клеток памяти
+− медленнее первого
+− отсутствует
+− такой же, как первый
+
+Клетки памяти обеспечивают:
++ быструю защиту при повторном заражении
+− свёртывание крови
+− перенос кислорода
+− выработку гормонов
+
+Главный фактор роста активированных Т-лимфоцитов:
+− гемоглобин
++ IL-2 (интерлейкин-2)
+− инсулин
+− адреналин
+
+Для полной активации Т-лимфоцита нужны:
+− один сигнал
++ распознавание антигена и дополнительный (костимуляционный) сигнал
+− только гормоны
+− только антитела
+
+Специфичность иммунного ответа означает, что:
++ антитело или Т-клетка узнаёт определённый антиген
+− ответ одинаков на всё
+− ответа нет
+− реагируют только эритроциты
+
+Иммунная память формируется:
+− только во врождённом иммунитете
++ в адаптивном иммунитете
+− в системе комплемента
+− в эритроцитах
+
+Главные клетки адаптивного иммунитета:
++ Т- и В-лимфоциты
+− эритроциты
+− тромбоциты
+− только нейтрофилы
+
+Эпитоп — это:
++ участок антигена, который узнаёт антитело
+− вид клетки
+− гормон
+− фермент
+
+MHC I класса есть на:
++ всех ядерных клетках организма
+− только на эритроцитах
+− только на бактериях
+− только на нейронах
+
+MHC II класса есть в основном на:
+− эритроцитах
++ антигенпрезентирующих клетках
+− мышечных клетках
+− нейронах
+
+CD8-лимфоциты (Т-киллеры) распознают антиген вместе с:
+− MHC II
++ MHC I
+− антителами
+− комплементом
+
+CD4-лимфоциты (Т-хелперы) распознают антиген вместе с:
+− MHC I
++ MHC II
+− комплементом
+− эритроцитами
+
+Гены MHC (HLA) у человека расположены на:
++ 6-й хромосоме
+− 1-й хромосоме
+− X-хромосоме
+− 21-й хромосоме
+
+Антитела — это продукт:
+− Т-киллеров
++ В-лимфоцитов (плазматических клеток)
+− эритроцитов
+− тромбоцитов
+
+Гуморальный иммунитет связан прежде всего с:
++ антителами
+− Т-киллерами
+− фагоцитозом
+− только комплементом
+
+Клеточный иммунитет связан прежде всего с:
+− антителами
++ Т-лимфоцитами
+− эритроцитами
+− тромбоцитами
+
+Вторичный иммунный ответ по сравнению с первичным:
++ быстрее и сильнее
+− медленнее
+− слабее
+− отсутствует
+
+Наивный лимфоцит — это лимфоцит, который:
++ ещё не встречался со своим антигеном
+− уже выработал антитела
+− погиб
+− превратился в эритроцит
+
+Антигенпрезентирующие клетки «показывают» антиген в комплексе с:
+− гемоглобином
++ молекулами MHC
+− инсулином
+− комплементом
+
+Главную помощь в иммунном ответе оказывают:
++ Т-хелперы (CD4)
+− эритроциты
+− тромбоциты
+− нейтрофилы
+
+Иммунный ответ, при котором образуются антитела, называют:
++ гуморальным
+− барьерным
+− только клеточным
+− видовым
+
+Встреча наивных лимфоцитов с антигеном происходит в основном в:
+− костном мозге
++ периферических лимфоидных органах (лимфоузлы, селезёнка)
+− крови
+− коже
+
+Антитела по-другому называются:
++ иммуноглобулины
+− интерфероны
+− комплемент
+− цитокины
+
+Молекула антитела состоит из:
++ двух тяжёлых и двух лёгких цепей
+− одной цепи
+− пяти лёгких цепей
+− только тяжёлых цепей
+
+Антиген связывается с антителом в области:
+− Fc-фрагмента
+− шарнира
++ Fab-фрагмента (переменной части)
+− только лёгкой цепи
+
+Всего классов иммуноглобулинов:
+− три
++ пять (IgG, IgM, IgA, IgE, IgD)
+− два
+− десять
+
+Самый большой иммуноглобулин (пентамер):
+− IgG
++ IgM
+− IgA
+− IgE
+
+Через плаценту от матери к плоду проходит:
+− IgM
+− IgA
++ IgG
+− IgE
+
+Главный иммуноглобулин слюны и секретов:
+− IgG
++ секреторный IgA
+− IgM
+− IgD
+
+Больше всего в сыворотке крови:
+− IgM
++ IgG
+− IgE
+− IgD
+
+IgE участвует в:
++ аллергических реакциях
+− переносе кислорода
+− свёртывании крови
+− пищеварении
+
+Нейтрализация — это способность антител:
+− переносить кислород
+− свёртывать кровь
++ блокировать вирус или токсин
+− синтезировать гормоны
+
+Опсонизация антителами означает:
++ усиление фагоцитоза микроба
+− свёртывание крови
+− лизис эритроцитов
+− синтез гормонов
+
+Лучше всех активирует комплемент:
+− IgG4
++ IgM
+− IgD
+− IgE
+
+При острой инфекции первыми появляются антитела класса:
+− IgG
+− IgA
++ IgM
+− IgE
+
+Позже и надолго появляются антитела класса:
+− IgM
++ IgG
+− IgE
+− IgD
+
+Fc-фрагмент антитела отвечает за:
+− связывание антигена
+− специфичность
+− переменную часть
++ эффекторные функции (связь с клетками и комплементом)
+
+Иммуноглобулины вырабатывают:
+− эритроциты
++ плазматические клетки
+− тромбоциты
+− нейтрофилы
+
+Fab-фрагмент антитела:
++ связывает антиген
+− связывает комплемент
+− переносит кислород
+− не имеет функции
+
+Главный иммуноглобулин сыворотки крови:
+− IgE
+− IgD
++ IgG
+− IgM
+
+IgA в большом количестве содержится в:
+− костях
++ слюне и других секретах
+− мышцах
+− только в крови
+
+Антитело, связанное с аллергией и защитой от гельминтов:
+− IgG
+− IgM
+− IgD
++ IgE
+
+Лёгкие цепи антител бывают типов:
++ каппа и лямбда
+− альфа и бета
+− гамма и мю
+− только один тип
+
+Какой иммуноглобулин первым образуется при первичном ответе:
+− IgG
++ IgM
+− IgA
+− IgE
+
+Антитела обеспечивают иммунитет:
+− только барьерный
+− только клеточный
++ гуморальный
+− видовой
+
+Материнские антитела защищают новорождённого — это пример иммунитета:
+− активного
++ пассивного
+− видового
+− клеточного
+
+Основная функция антител:
++ распознавание и связывание антигена
+− перенос кислорода
+− выработка гормонов
+− пищеварение
+
+Нейтрализация токсинов — функция:
+− эритроцитов
+− тромбоцитов
++ антител
+− комплемента
+
+Класс иммуноглобулина определяется:
++ тяжёлой цепью
+− лёгкой цепью
+− размером антигена
+− видом клетки
+
+Переменная часть антитела нужна для:
+− эффекторных функций
++ связывания конкретного антигена
+− переноса кислорода
+− свёртывания крови
+
+Антитела класса IgG способны:
+− переносить кислород
+− только оставаться в слюне
++ проходить через плаценту
+− свёртывать кровь
+
+Сыворотку (готовые антитела) вводят, чтобы:
++ быстро защитить при угрозе инфекции
+− сформировать долгую память
+− заменить вакцину навсегда
+− вызвать аллергию
+
+Главные клетки клеточного иммунитета:
+− эритроциты
++ Т-лимфоциты
+− тромбоциты
+− тучные клетки
+
+Т-киллеры (CD8) уничтожают:
++ заражённые вирусом и опухолевые клетки
+− эритроциты
+− тромбоциты
+− антитела
+
+Т-хелперы несут маркёр:
+− CD8
+− CD19
++ CD4
+− CD56
+
+Т-киллеры несут маркёр:
+− CD4
++ CD8
+− CD19
+− CD56
+
+Th1-клетки активируют:
+− эритроциты
+− тромбоциты
+− свёртывание крови
++ макрофаги для борьбы с внутриклеточными микробами
+
+Th2-клетки важны в защите от:
++ гельминтов и в аллергии
+− переломов
+− анемии
+− свёртывания крови
+
+Регуляторные Т-клетки (Treg):
+− усиливают аллергию всегда
++ подавляют и регулируют иммунный ответ
+− переносят кислород
+− свёртывают кровь
+
+Перфорин Т-киллера:
+− переносит кислород
+− синтезирует антитела
++ образует поры в мембране клетки-мишени
+− свёртывает кровь
+
+Главный цитокин Th1:
++ IFN-γ (интерферон-гамма)
+− IL-4
+− IL-5
+− гистамин
+
+Апоптоз — это:
+− деление клетки
++ запрограммированная гибель клетки
+− перенос кислорода
+− свёртывание крови
+
+Проба Манту (замедленная гиперчувствительность) связана с:
+− эритроцитами
+− тромбоцитами
++ Т-лимфоцитами
+− только антителами
+
+Хроническое воспаление с гранулёмами (туберкулёз) связано с:
++ Th1 и макрофагами
+− IgE
+− эритроцитами
+− комплементом
+
+NK-клетки, в отличие от Т-киллеров:
+− вырабатывают антитела
++ действуют без предварительной сенсибилизации
+− переносят кислород
+− свёртывают кровь
+
+Клетки памяти в клеточном иммунитете обеспечивают:
+− перенос кислорода
+− свёртывание крови
++ быстрый ответ при повторной встрече
+− выработку гормонов
+
+Через систему Fas/FasL клетка-мишень:
++ погибает (апоптоз)
+− делится
+− переносит кислород
+− синтезирует антитела
+
+Т-лимфоциты созревают в:
++ тимусе
+− селезёнке
+− печени
+− коже
+
+Какой цитокин вырабатывают Th1:
+− IL-4
++ IFN-γ
+− IL-5
+− гистамин
+
+Th2-клетки вырабатывают:
+− IFN-γ
+− перфорин
++ IL-4 и IL-5
+− лизоцим
+
+Главная функция Т-киллеров:
++ уничтожение заражённых и опухолевых клеток
+− выработка антител
+− перенос кислорода
+− свёртывание крови
+
+Регуляторные Т-клетки нужны, чтобы:
+− усиливать воспаление
+− переносить кислород
++ не допускать избыточного и аутоиммунного ответа
+− свёртывать кровь
+
+Гранзимы Т-киллера:
++ запускают апоптоз клетки-мишени
+− переносят кислород
+− синтезируют гормоны
+− свёртывают кровь
+
+Маркёр Т-хелперов:
+− CD8
++ CD4
+− CD19
+− CD56
+
+Маркёр Т-киллеров:
+− CD4
+− CD19
++ CD8
+− CD56
+
+Th17-клетки важны в защите от:
++ грибов (Candida) и некоторых бактерий на слизистых
+− переломов
+− анемии
+− кислородного голодания
+
+Два главных способа убийства клетки Т-киллером:
+− фагоцитоз и пиноцитоз
++ перфорин/гранзимы и Fas/FasL
+− комплемент и опсонизация
+− IgG и IgA
+
+Клеточный иммунитет особенно важен против:
++ внутриклеточных микробов и вирусов
+− только токсинов
+− только аллергенов
+− переломов
+
+Макрофаги, активированные Th1:
+− переносят кислород
+− свёртывают кровь
++ лучше убивают захваченные микробы
+− синтезируют инсулин
+
+Клетки памяти обеспечивают:
++ быстрый повторный ответ
+− перенос кислорода
+− свёртывание крови
+− выработку гормонов
+
+Главные клетки клеточного иммунитета:
+− эритроциты
++ Т-лимфоциты
+− тромбоциты
+− тучные клетки
+
+Проба Манту — пример реакции:
+− немедленного типа
+− гуморальной
++ замедленного (Т-клеточного) типа
+− аллергии I типа`;
+
+/* ============================================================
+   ПАРСЕР
+   ============================================================ */
+function parse(raw){
+  const blocks = raw.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+  const out = [];
+  blocks.forEach(block => {
+    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+    if (!lines.length) return;
+    const q = lines[0];
+    const opts = [];
+    let correct = -1;
+    for (let i = 1; i < lines.length; i++){
+      const l = lines[i];
+      if (l.startsWith('+')) { correct = opts.length; opts.push(l.slice(1).trim()); }
+      else if (l.startsWith('−') || l.startsWith('-')) { opts.push(l.slice(1).trim()); }
+    }
+    if (q && opts.length && correct >= 0) out.push({ q, opts, correct });
+  });
+  return out;
+}
+
+const QUESTIONS = parse(RAW);
+const TOTAL = QUESTIONS.length;
+
+/* ============================================================
+   СОСТОЯНИЕ
+   ============================================================ */
+const LS_KEY = 'immuno_test_state_v1';
+const state = {
+  answers: {},      // {qIndex: {selected, correct}} — последний ответ
+  favorites: {},    // {qIndex: true}
+  bestScore: null,  // {pct, grade, time}
+  bestTime: null
+};
+function loadState(){
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_KEY));
+    if (s) Object.assign(state, s);
+  } catch(e){}
+}
+function saveState(){
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e){}
+}
+loadState();
+
+/* ============================================================
+   SESSION (текущая попытка)
+   ============================================================ */
+let session = {
+  order: [],       // индексы вопросов в порядке прохождения
+  pos: 0,          // текущая позиция
+  answers: {},     // {qIndex: selectedIdx | null}
+  started: 0,      // timestamp
+  finished: false,
+  mode: 'normal'   // normal | exam | errors | fav
+};
+let timerInterval = null;
+let elapsed = 0;          // секунд
+let examDuration = 20*60; // 20 минут
+let examRemaining = examDuration;
+
+/* ============================================================
+   УТИЛИТЫ
+   ============================================================ */
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function fmtTime(sec){
+  const m = Math.floor(sec/60), s = sec%60;
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+function gradeFromPct(pct){
+  if (pct >= 90) return '5';
+  if (pct >= 75) return '4';
+  if (pct >= 60) return '3';
+  return '2';
+}
+function gradeColor(g){
+  return g === '5' ? 'var(--good)' : g === '4' ? '#7ed957' : g === '3' ? '#f1c40f' : 'var(--bad)';
+}
+
+/* ============================================================
+   ОБНОВЛЕНИЕ САЙДБАРА
+   ============================================================ */
+function updateStats(){
+  const answered = Object.keys(state.answers).length;
+  let good = 0, bad = 0;
+  for (const k in state.answers){
+    if (state.answers[k].correct) good++; else bad++;
+  }
+  document.getElementById('sAns').textContent = answered;
+  document.getElementById('sTot').textContent = TOTAL;
+  document.getElementById('sGood').textContent = good;
+  document.getElementById('sBad').textContent = bad;
+  document.getElementById('sFav').textContent = Object.keys(state.favorites).length;
+  renderFavList();
+}
+function renderFavList(){
+  const box = document.getElementById('favList');
+  const keys = Object.keys(state.favorites).map(Number).sort((a,b)=>a-b);
+  if (!keys.length){ box.innerHTML = '<div class="empty">Пока пусто</div>'; return; }
+  box.innerHTML = keys.map(i => `
+    <div class="fav-item" data-i="${i}">
+      <span>${i+1}. ${escapeHtml(QUESTIONS[i].q.slice(0,45))}${QUESTIONS[i].q.length>45?'…':''}</span>
+      <button data-rm="${i}" title="Убрать">×</button>
+    </div>`).join('');
+  box.querySelectorAll('.fav-item').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.dataset.rm !== undefined){
+        delete state.favorites[e.target.dataset.rm];
+        saveState(); updateStats();
+        return;
+      }
+      // переход к вопросу из избранного (просмотр вне сессии)
+      const i = Number(el.dataset.i);
+      viewSingleQuestion(i);
+    });
+  });
+}
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ============================================================
+   ТАЙМЕР
+   ============================================================ */
+function startTimer(mode){
+  stopTimer();
+  elapsed = 0;
+  examRemaining = examDuration;
+  updateTimerDisplay(mode);
+  timerInterval = setInterval(() => {
+    elapsed++;
+    if (mode === 'exam'){
+      examRemaining--;
+      if (examRemaining <= 0){
+        examRemaining = 0;
+        updateTimerDisplay(mode);
+        stopTimer();
+        finishSession(true);
+        return;
+      }
+    }
+    updateTimerDisplay(mode);
+  }, 1000);
+}
+function stopTimer(){
+  if (timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+}
+function updateTimerDisplay(mode){
+  const el = document.getElementById('timer');
+  if (mode === 'exam'){
+    el.textContent = '⏱ ' + fmtTime(examRemaining);
+    el.classList.toggle('warn', examRemaining <= 60);
+  } else {
+    el.textContent = '⏱ ' + fmtTime(elapsed);
+    el.classList.remove('warn');
+  }
+}
+
+/* ============================================================
+   ЗАПУСК СЕССИИ
+   ============================================================ */
+function startSession(mode, indexes){
+  if (!indexes || !indexes.length){
+    alert('Нет вопросов для этого режима.');
+    return;
+  }
+  session = {
+    order: shuffle(indexes),
+    pos: 0,
+    answers: {},
+    started: Date.now(),
+    finished: false,
+    mode
+  };
+  startTimer(mode);
+  renderQuestion();
+}
+function startAll(){
+  startSession('normal', QUESTIONS.map((_,i)=>i));
+}
+function startExam(){
+  startSession('exam', QUESTIONS.map((_,i)=>i));
+}
+function startErrors(){
+  const idx = Object.keys(state.answers)
+    .map(Number)
+    .filter(i => state.answers[i] && !state.answers[i].correct);
+  if (!idx.length){ alert('Ошибок нет. Сначала пройди тест.'); return; }
+  startSession('normal', idx);
+}
+function startFav(){
+  const idx = Object.keys(state.favorites).map(Number);
+  if (!idx.length){ alert('Избранное пусто.'); return; }
+  startSession('normal', idx);
+}
+
+/* ============================================================
+   РЕНДЕР ВОПРОСА
+   ============================================================ */
+function renderQuestion(){
+  if (session.pos >= session.order.length){ finishSession(); return; }
+  const qIndex = session.order[session.pos];
+  const q = QUESTIONS[qIndex];
+  const answered = session.answers[qIndex] !== undefined;
+  const selected = session.answers[qIndex];
+  const isExam = session.mode === 'exam';
+  const showFeedback = answered && !isExam;
+
+  const area = document.getElementById('quizArea');
+  area.innerHTML = `
+    <div class="card">
+      <div class="q-num">Вопрос ${session.pos + 1} из ${session.order.length}</div>
+      <div class="q-text">
+        <button class="star-btn ${state.favorites[qIndex]?'active':''}" id="starBtn" title="В избранное">★</button>
+        ${escapeHtml(q.q)}
+      </div>
+      <div id="opts">
+        ${q.opts.map((o,i) => {
+          let cls = 'opt';
+          if (showFeedback){
+            cls += ' disabled';
+            if (i === q.correct) cls += ' correct';
+            else if (i === selected) cls += ' wrong';
+          }
+          return `<button class="${cls}" data-i="${i}" ${showFeedback?'disabled':''}>${escapeHtml(o)}</button>`;
+        }).join('')}
+      </div>
+      <div class="actions">
+        ${!answered && !isExam ? `<button class="show-answer" id="showAnswerBtn">Показать правильный ответ</button>` : ''}
+        <button class="act" id="nextBtn" ${(!answered && !isExam) ? 'disabled' : ''}>${session.pos + 1 === session.order.length ? 'Завершить' : 'Дальше →'}</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('starBtn').addEventListener('click', () => {
+    if (state.favorites[qIndex]) delete state.favorites[qIndex];
+    else state.favorites[qIndex] = true;
+    saveState(); updateStats(); renderQuestion();
+  });
+
+  area.querySelectorAll('.opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (answered) return;
+      const i = Number(btn.dataset.i);
+      session.answers[qIndex] = i;
+      // сохраняем в постоянное состояние
+      state.answers[qIndex] = { selected: i, correct: i === q.correct };
+      saveState(); updateStats();
+      renderQuestion();
+    });
+  });
+
+  const showBtn = document.getElementById('showAnswerBtn');
+  if (showBtn){
+    showBtn.addEventListener('click', () => {
+      session.answers[qIndex] = null; // не выбран, но помечен как "показан"
+      // не сохраняем как ошибку — просто показываем
+      // отображаем правильный ответ вручную
+      const opts = area.querySelectorAll('.opt');
+      opts.forEach((b,i) => {
+        b.disabled = true; b.classList.add('disabled');
+        if (i === q.correct) b.classList.add('correct');
+      });
+      showBtn.remove();
+      document.getElementById('nextBtn').disabled = false;
+      // фиксируем как неверный (пользователь не ответил)
+      state.answers[qIndex] = { selected: -1, correct: false };
+      saveState(); updateStats();
+    });
+  }
+
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    session.pos++;
+    renderQuestion();
+  });
+
+  updateProgress();
+}
+
+function updateProgress(){
+  document.getElementById('progressText').textContent =
+    `${session.pos + 1} / ${session.order.length}`;
+}
+
+/* ============================================================
+   ЗАВЕРШЕНИЕ СЕССИИ
+   ============================================================ */
+function finishSession(timeUp){
+  stopTimer();
+  session.finished = true;
+  let good = 0, bad = 0, unanswered = 0;
+  session.order.forEach(qi => {
+    const a = session.answers[qi];
+    if (a === undefined || a === null) unanswered++;
+    else if (a === QUESTIONS[qi].correct) good++;
+    else bad++;
+  });
+  const answeredCount = good + bad;
+  const pct = answeredCount ? Math.round(good / session.order.length * 100) : 0;
+  const grade = gradeFromPct(pct);
+  const timeStr = fmtTime(elapsed);
+
+  // Лучший результат
+  if (state.bestScore === null || pct > state.bestScore.pct ||
+      (pct === state.bestScore.pct && elapsed < state.bestScore.seconds)){
+    state.bestScore = { pct, grade, seconds: elapsed, timeStr };
+    saveState();
+  }
+
+  document.getElementById('timer').textContent = '⏱ ' + timeStr;
+
+  const area = document.getElementById('quizArea');
+  area.innerHTML = `
+    <div class="card result">
+      <div style="font-size:15px;color:var(--muted)">${timeUp?'Время вышло!':'Тест завершён'}</div>
+      <div class="grade" style="color:${gradeColor(grade)}">${grade}</div>
+      <div class="pct">${pct}% правильных</div>
+      <div class="rows">
+        <div class="row-good">Верно: <b>${good}</b></div>
+        <div class="row-bad">Неверно: <b>${bad}</b></div>
+        <div>Без ответа: <b>${unanswered}</b></div>
+        <div>Время: <b>${timeStr}</b></div>
+      </div>
+      ${state.bestScore ? `<div style="font-size:13px;color:var(--muted);margin-bottom:18px">Лучший результат: ${state.bestScore.pct}% (оценка ${state.bestScore.grade}, ${state.bestScore.timeStr})</div>` : ''}
+      <div class="actions" style="justify-content:center">
+        ${bad > 0 ? `<button class="act" id="resErrorsBtn">Разобрать ошибки</button>` : ''}
+        <button class="act ghost" id="resRestartBtn">Пройти заново</button>
+        ${Object.keys(state.favorites).length ? `<button class="act ghost" id="resFavBtn">Только избранное</button>` : ''}
+      </div>
+    </div>
+  `;
+  document.getElementById('progressText').textContent = `${session.order.length} / ${session.order.length}`;
+
+  const eb = document.getElementById('resErrorsBtn');
+  if (eb) eb.addEventListener('click', startErrors);
+  document.getElementById('resRestartBtn').addEventListener('click', startAll);
+  const fb = document.getElementById('resFavBtn');
+  if (fb) fb.addEventListener('click', startFav);
+
+  updateStats();
+}
+
+/* ============================================================
+   ПРОСМОТР ОДИНОЧНОГО ВОПРОСА (из избранного)
+   ============================================================ */
+function viewSingleQuestion(qIndex){
+  stopTimer();
+  const q = QUESTIONS[qIndex];
+  const area = document.getElementById('quizArea');
+  area.innerHTML = `
+    <div class="card">
+      <div class="q-num">Вопрос ${qIndex + 1}</div>
+      <div class="q-text">
+        <button class="star-btn active" id="starBtn" title="Убрать из избранного">★</button>
+        ${escapeHtml(q.q)}
+      </div>
+      <div>
+        ${q.opts.map((o,i) => {
+          const cls = 'opt disabled' + (i === q.correct ? ' correct' : '');
+          return `<button class="${cls}" disabled>${escapeHtml(o)}</button>`;
+        }).join('')}
+      </div>
+      <div class="actions">
+        <button class="act" id="backBtn">← К тесту</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('starBtn').addEventListener('click', () => {
+    delete state.favorites[qIndex];
+    saveState(); updateStats();
+    renderFavList();
+  });
+  document.getElementById('backBtn').addEventListener('click', () => {
+    if (!session.finished && session.order.length){
+      renderQuestion();
+      if (session.mode === 'exam') startTimer('exam'); else startTimer('normal');
+    } else {
+      startAll();
+    }
+  });
+}
+
+/* ============================================================
+   КНОПКИ САЙДБАРА
+   ============================================================ */
+document.getElementById('restartBtn').addEventListener('click', startAll);
+document.getElementById('errorsBtn').addEventListener('click', startErrors);
+document.getElementById('favBtn').addEventListener('click', startFav);
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (!confirm('Сбросить весь прогресс, избранное и лучший результат?')) return;
+  state.answers = {};
+  state.favorites = {};
+  state.bestScore = null;
+  saveState();
+  updateStats();
+  stopTimer();
+  startAll();
+});
+
+/* ============================================================
+   СТАРТ
+   ============================================================ */
+updateStats();
+startAll();
+</script>
+</body>
+</html>
