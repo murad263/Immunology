@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Иммунология</title>
+<meta name="robots" content="noindex, nofollow">
+<title>xAdmin</title>
 <style>
   :root{
     --bg:#0a0a0a; --panel:#141414; --panel2:#1f1f1f; --border:#333;
@@ -12,1244 +13,465 @@
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   html, body {
-    width: 100%; height: 100%; 
-    overflow: hidden; 
+    width: 100%; min-height: 100vh;
     font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial,sans-serif;
     background:var(--bg); color:var(--text);
     -webkit-text-size-adjust: 100%;
   }
-  body {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    display: flex; flex-direction: column;
+  body { display: flex; flex-direction: column; overflow-x: hidden; }
+
+  header {
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; z-index: 10; width: 100%; flex-shrink: 0;
+  }
+  .header-title { font-size: 16px; font-weight: 600; color: var(--white); }
+  .status {
+    font-size: 12px; padding: 6px 12px; border-radius: 8px;
+    background: var(--panel2); border: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px; font-weight: 600;
+  }
+  .status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+  .status.online { background: rgba(46,204,113,0.15); color: var(--good); border-color: var(--good); }
+  .status.online::before { background: var(--good); }
+  .status.offline { background: rgba(231,76,60,0.15); color: var(--bad); border-color: var(--bad); }
+  .status.offline::before { background: var(--bad); }
+
+  .main-container {
+    flex: 1; width: 100%; max-width: 800px; margin: 0 auto;
+    padding: 16px; display: flex; flex-direction: column; gap: 16px;
   }
 
-  /* HEADER */
-  header{background:var(--panel);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:10; width: 100%; flex-shrink: 0;}
-  .header-title{font-size:16px;font-weight:600;color:var(--white); line-height: 1.2;}
-  .header-actions { display: flex; gap: 8px; align-items: center; }
-  .header-btn{background:var(--panel2);border:1px solid var(--border);color:var(--white);padding:8px; border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:0.2s; text-decoration: none;}
-  .header-btn:hover{background:#2a2a2a; border-color: var(--white);}
-  .header-btn svg { width: 22px; height: 22px; }
+  .card {
+    background: var(--panel); border-radius: 12px; padding: 18px;
+    border: 1px solid var(--border); width: 100%;
+  }
+  .card h2 {
+    font-size: 16px; color: var(--white); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card h2 svg { flex-shrink: 0; color: var(--accent); }
 
-  /* LAYOUT */
-  .main-container{display:flex;flex:1;width:100%;max-width:900px;margin:0 auto;padding:12px;flex-direction:column;gap:12px; overflow: hidden;}
+  label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--muted); font-weight: 600; }
   
-  /* STATS BAR */
-  .stats-bar{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;width: 100%; flex-shrink: 0;}
-  .stats-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:13px;flex-wrap:wrap;gap:8px}
-  .stats-row span{color:var(--muted)}
-  .stats-row b{color:var(--white)}
-  .stats-row b.good{color:var(--good)}
-  .stats-row b.bad{color:var(--bad)}
-  .timer-badge{background:var(--white);color:var(--black);padding:6px 10px;border-radius:8px;font-weight:bold;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px; font-size:13px;}
-  .timer-badge.warn{background:var(--bad);color:var(--white)}
-  .progress-bar-bg{height:4px;background:var(--panel2);border-radius:2px;overflow:hidden}
-  .progress-bar-fill{height:100%;background:var(--white);width:0%;transition:0.3s}
+  .setting-input, select, textarea {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--white);
+    padding: 10px 12px; border-radius: 8px; width: 100%; font-size: 14px;
+    margin-bottom: 12px; outline: none; font-family: inherit;
+  }
+  .setting-input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  select { cursor: pointer; -webkit-appearance: none; appearance: none; }
+  textarea { min-height: 150px; resize: vertical; font-family: monospace; line-height: 1.4; }
 
-  /* NAVIGATION SCROLL */
-  .nav-container {
-    width: 100%; overflow-x: auto; background: var(--panel); border-radius: 12px;
-    border: 1px solid var(--border); padding: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  .btn {
+    background: var(--white); color: var(--black); border: none;
+    padding: 10px 16px; border-radius: 8px; font-weight: 600; font-size: 14px;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: 0.2s; font-family: inherit;
+  }
+  .btn:hover { background: #ddd; }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn svg { flex-shrink: 0; }
+
+  .btn-dark { background: var(--panel2); color: var(--white); border: 1px solid var(--border); }
+  .btn-dark:hover { background: #2a2a2a; border-color: var(--white); }
+  .btn-accent { background: var(--accent); color: var(--white); }
+  .btn-accent:hover { background: #3b8edb; }
+  .btn-danger { background: var(--bad); color: var(--white); }
+  .btn-danger:hover { background: #c0392b; }
+
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .row .btn { flex: 1; min-width: 100px; }
+
+  .status-msg {
+    font-size: 13px; margin-top: 12px; padding: 10px 12px; border-radius: 8px;
+    display: none; align-items: center; gap: 8px; line-height: 1.3;
+  }
+  .status-msg.ok { background: rgba(46,204,113,0.15); border: 1px solid var(--good); color: var(--good); display: flex; }
+  .status-msg.err { background: rgba(231,76,60,0.15); border: 1px solid var(--bad); color: var(--bad); display: flex; }
+  .status-msg svg { flex-shrink: 0; }
+
+  .hint { font-size: 12px; color: var(--muted); margin-top: -8px; margin-bottom: 12px; line-height: 1.4; }
+  
+  .hidden { display: none !important; }
+
+  /* === ХЛЕБНЫЕ КРОШКИ === */
+  .tree-box { display: flex; flex-direction: column; gap: 8px; }
+  
+  .breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    margin-bottom: 8px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .breadcrumbs span.crumb {
+    cursor: pointer;
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .breadcrumbs span.crumb:hover { color: #7ab8ff; }
+  .breadcrumbs span.sep { color: var(--border); }
+
+  .nav-row {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    transition: 0.2s;
+  }
+  .nav-row:hover { border-color: var(--accent); }
+  
+  .nav-row-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+  .nav-row-title svg { color: var(--accent); flex-shrink: 0; }
+  
+  .nav-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .nav-row-actions .btn { padding: 6px 10px; font-size: 12px; min-width: 0; flex: 0 0 auto; }
+
+  .nav-arrow {
+    width: 8px; height: 8px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(-45deg);
+    margin-left: 8px;
     flex-shrink: 0;
   }
-  .nav-container::-webkit-scrollbar { display: none; }
-  .nav-grid{display:flex; gap:4px; width: max-content;}
-  .nav-btn{width:32px; height:32px; border-radius:6px; border:1px solid var(--border); background:var(--panel2); color:var(--text); font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.1s; font-size:12px; flex-shrink: 0;}
-  .nav-btn:hover{border-color:var(--white)}
-  .nav-btn.active{background:var(--white); color:var(--black); border-color:var(--white); transform: scale(1.1);}
-  
-  .nav-btn.good{background:rgba(46,204,113,0.2); border-color:var(--good); color:var(--good)}
-  .nav-btn.bad{background:rgba(231,76,60,0.2); border-color:var(--bad); color:var(--bad)}
-  .nav-btn.white-passed{background:rgba(255,255,255,0.15); border-color:var(--white); color:var(--white)}
 
-  /* SWIPE CONTAINER */
-  .swipe-container {
-    display: flex;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    width: 100%;
-    border-radius: 12px;
-    flex: 1; 
+  .test-item {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    font-size: 13px;
   }
-  .swipe-container::-webkit-scrollbar { display: none; }
+  .test-item .meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .test-item-info { display: flex; flex-direction: column; overflow: hidden; }
+  .test-item-title { font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .test-item-title svg { color: var(--muted); flex-shrink: 0; }
 
-  /* QUESTION CARD */
-  .card{
-    flex: 0 0 100%;
-    scroll-snap-align: start;
-    background:var(--panel); border-radius:12px; padding:20px; border:1px solid var(--border); 
-    position:relative; box-sizing: border-box; margin-bottom: 20px;
-    width: 100%;
-    overflow-wrap: break-word; 
-    word-wrap: break-word;
-    height: max-content; 
-    max-height: 100%; 
-    overflow-y: auto;
-  }
-  .q-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px; gap: 10px;}
-  .q-titles{display: flex; flex-direction: column; gap: 4px; flex:1; min-width:0;}
-  .q-num{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.5px;text-transform:uppercase}
-  .q-orig{font-size:12px; color: var(--accent); font-weight: 600; background: rgba(74, 158, 255, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-block; width: max-content;}
-  
-  .q-header-actions{display:flex;gap:4px;flex-shrink:0;}
-  .star-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;transition:0.2s; flex-shrink: 0;}
-  .star-btn:hover{color:var(--star)}
-  .star-btn.active{color:var(--star)}
-  .star-btn svg{width:22px;height:22px}
-  
-  .finish-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;transition:0.2s;}
-  .finish-btn:hover{color:var(--bad)}
-  .finish-btn svg{width:22px;height:22px}
-
-  .question-timer{display:none;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--border);padding:4px 10px;border-radius:6px;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text);width:max-content;margin-bottom:12px;font-weight:600;}
-  .question-timer.warn{background:rgba(231,76,60,0.2);border-color:var(--bad);color:var(--bad)}
-
-  .q-text{font-size:16px;margin-bottom:16px;line-height:1.4;color:var(--white);font-weight:500; overflow-wrap: break-word;}
-  
-  .opt{
-    display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;background:var(--panel2);color:var(--text);
-    border:1px solid var(--border);padding:12px 14px;border-radius:8px;margin-bottom:8px;cursor:pointer;font-size:14px;transition:0.15s;
-    overflow-wrap: break-word;
-  }
-  .opt:hover:not(.disabled){border-color:var(--white)}
-  .opt.disabled{cursor:default;opacity:0.9}
-  .opt.correct{background:rgba(46,204,113,0.15);border-color:var(--good);color:#b8f5d0}
-  .opt.wrong{background:rgba(231,76,60,0.15);border-color:var(--bad);color:#f5c0b8}
-  .opt.selected{border-color:var(--accent);background:rgba(74,158,255,0.1)}
-  
-  .opt-radio{width:18px;height:18px;border:2px solid var(--muted);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0; margin-top: 2px;}
-  .opt.correct .opt-radio{border-color:var(--good);background:var(--good)}
-  .opt.wrong .opt-radio{border-color:var(--bad);background:var(--bad)}
-  .opt-radio::after{content:'';width:6px;height:6px;background:var(--panel);border-radius:50%;display:none}
-  .opt.correct .opt-radio::after, .opt.wrong .opt-radio::after{display:block}
-
-  /* ACTION BUTTONS */
-  .actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
-  .btn{background:var(--white);color:var(--black);border:none;padding:12px 16px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:0.2s;flex:1;min-width:100px}
-  .btn:hover{background:#ddd}
-  .btn:disabled{opacity:0.5;cursor:not-allowed}
-  .btn-dark{background:var(--panel2);color:var(--white);border:1px solid var(--border)}
-  .btn-dark:hover{background:#2a2a2a;border-color:var(--white)}
-  
-  .btn-active-toggle { background: var(--accent); color: var(--white); border-color: var(--accent); }
-  .btn-active-toggle:hover { background: #3b8edb; }
-
-  /* FOOTER */
-  footer{text-align:center;color:var(--muted);font-size:12px;padding:10px;flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 6px;}
-  footer svg { width: 14px; height: 14px; }
-
-  /* SIDEBAR SETTINGS */
-  .sidebar-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:20;display:none;opacity:0;transition:opacity 0.2s}
-  .sidebar-overlay.show{display:block;opacity:1}
-  .sidebar{position:fixed;top:0;right:-100%;width:100%;max-width:340px;height:100%;background:var(--panel);z-index:21;border-left:1px solid var(--border);padding:16px;overflow-y:auto;transition:right 0.3s;display:flex;flex-direction:column;gap:16px}
-  .sidebar.show{right:0}
-  .sidebar-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:12px}
-  .sidebar-header h3{margin:0;font-size:16px;color:var(--white)}
-  .close-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;display:flex}
-  .close-btn:hover{color:var(--white)}
-  .close-btn svg{width:22px;height:22px}
-
-  .setting-group{margin-bottom:16px}
-  .setting-title{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:0.5px;margin-bottom:8px}
-  .setting-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;font-size:14px}
-  .setting-row input[type="checkbox"]{width:18px;height:18px;accent-color:var(--white);cursor:pointer}
-  .setting-input{background:var(--panel2);border:1px solid var(--border);color:var(--white);padding:8px 10px;border-radius:6px;width:100%;font-size:14px;margin-bottom:8px;outline:none}
-  .setting-input:focus{border-color:var(--white)}
-  .setting-hint{font-size:11px;color:var(--muted);line-height:1.3}
-
-  .timer-controls{display:flex;gap:6px}
-  .timer-controls .btn{flex:1;padding:8px;font-size:12px}
-
-  /* RESULT */
-  .result{text-align:center;padding:24px 16px; flex: 0 0 100%; scroll-snap-align: start; background:var(--panel); border-radius:12px; border:1px solid var(--border); height: max-content;}
-  .result .grade{font-size:56px;font-weight:800;color:var(--white);margin:8px 0}
-  .result .pct{font-size:18px;color:var(--muted);margin-bottom:20px}
-  .result-stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;font-size:14px}
-  .result-stats div{background:var(--panel2);padding:10px 14px;border-radius:8px;border:1px solid var(--border)}
-  .result-stats b{color:var(--white)}
-
-  /* ===== MODAL ===== */
-  .modal-overlay{
-    position:fixed; inset:0; background:rgba(0,0,0,0.7);
-    z-index:50; display:none; align-items:center; justify-content:center;
-    padding:20px; opacity:0; transition:opacity 0.2s;
+  /* Модальные окна (кастомные) */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    z-index: 50; display: none; align-items: center; justify-content: center;
+    padding: 20px; opacity: 0; transition: opacity 0.2s;
     -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
   }
-  .modal-overlay.show{ display:flex; opacity:1; }
-  .modal{
-    background:var(--panel); border:1px solid var(--border);
-    border-radius:14px; padding:22px 20px; width:100%; max-width:380px;
-    box-shadow:0 20px 60px rgba(0,0,0,0.6);
-    transform:scale(0.92); transition:transform 0.2s;
+  .modal-overlay.show { display: flex; opacity: 1; }
+  .modal {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 22px 20px; width: 100%; max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    transform: scale(0.92); transition: transform 0.2s;
+    max-height: 90vh; display: flex; flex-direction: column;
   }
-  .modal-overlay.show .modal{ transform:scale(1); }
-  .modal-icon{
-    width:44px; height:44px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    margin:0 auto 14px; background:rgba(74,158,255,0.15); color:var(--accent);
+  .modal-overlay.show .modal { transform: scale(1); }
+  .modal-title {
+    font-size: 17px; font-weight: 700; color: var(--white);
+    margin-bottom: 16px; line-height: 1.3; flex-shrink: 0;
   }
-  .modal-icon.danger{ background:rgba(231,76,60,0.15); color:var(--bad); }
-  .modal-icon.warn{ background:rgba(241,196,15,0.15); color:var(--star); }
-  .modal-icon svg{ width:24px; height:24px; }
-  .modal-title{
-    font-size:17px; font-weight:700; color:var(--white);
-    text-align:center; margin-bottom:8px; line-height:1.3;
+  .modal-body { overflow-y: auto; flex: 1; margin-bottom: 16px; }
+  .modal-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .modal-actions .btn { flex: 1; padding: 11px 14px; }
+
+  /* Спиннер загрузки */
+  .loading-overlay {
+    position: fixed; inset: 0; background: rgba(10, 10, 10, 0.85);
+    z-index: 100; display: none; align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px; opacity: 0; transition: opacity 0.2s;
+    -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
   }
-  .modal-text{
-    font-size:14px; color:var(--muted); text-align:center;
-    line-height:1.45; margin-bottom:20px; overflow-wrap:break-word;
+  .loading-overlay.show { display: flex; opacity: 1; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 4px solid var(--panel2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
   }
-  .modal-actions{ display:flex; gap:8px; }
-  .modal-actions .btn{ flex:1; padding:11px 14px; font-size:14px; }
-  .btn-danger{ background:var(--bad); color:var(--white); }
-  .btn-danger:hover{ background:#c0392b; }
-  .btn-accent{ background:var(--accent); color:var(--white); }
-  .btn-accent:hover{ background:#3b8edb; }
-  @keyframes modalShake{
-    0%,100%{ transform:scale(1) translateX(0); }
-    25%{ transform:scale(1) translateX(-6px); }
-    75%{ transform:scale(1) translateX(6px); }
-  }
-  .modal.shake{ animation:modalShake 0.3s; }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+  .loading-text { color: var(--white); font-weight: 600; font-size: 14px; }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="header-title">Иммунология: Аттестация 26.11.2026</div>
-  <div class="header-actions">
-    <a href="https://vk.ru/id179650895" target="_blank" class="header-btn" title="VK">
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12.785 16.241s.288-.032.436-.194c.136-.148.132-.427.132-.427s-.02-1.304.576-1.496c.588-.19 1.341 1.26 2.14 1.816.605.42 1.064.328 1.064.328l2.138-.03s1.12-.07.588-.96c-.043-.073-.307-.656-1.58-1.862-1.332-1.261-1.154-1.057.45-3.24.978-1.33 1.368-2.14 1.246-2.487-.116-.33-.832-.243-.832-.243l-2.406.015s-.178-.025-.31.056c-.13.08-.212.264-.212.264s-.383 1.03-.893 1.907c-1.077 1.85-1.508 1.948-1.684 1.833-.408-.268-.306-1.074-.306-1.647 0-1.79.267-2.536-.522-2.73-.262-.063-.454-.104-1.123-.11-.858-.01-1.583.003-1.993.207-.273.135-.484.437-.355.454.158.02.517.098.707.36.245.338.236 1.095.236 1.095s.14 2.105-.327 2.366c-.32.178-.76-.185-1.7-1.846-.485-.847-.85-1.784-.85-1.784s-.07-.175-.197-.268c-.154-.113-.37-.148-.37-.148l-2.287.015s-.343.01-.468.161c-.112.135-.009.413-.009.413s1.79 4.25 3.817 6.39c1.857 1.96 3.965 1.83 3.965 1.83h.954z"/>
-      </svg>
-    </a>
-    <a href="https://instagram.com/drmuradkhibievich" target="_blank" class="header-btn" title="Instagram">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-    </a>
-    <button class="header-btn" id="openSettingsBtn" title="Настройки">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-    </button>
-  </div>
+  <div class="header-title">xAdmin</div>
+  <div class="status offline" id="connStatus">Не подключено</div>
 </header>
 
 <div class="main-container">
-  <div class="stats-bar">
-    <div class="stats-row">
-      <div>Отвечено: <b id="sAns">0</b> / <span id="sTot">0</span></div>
-      <div>Верно: <b class="good" id="sGood">0</b></div>
-      <div>Неверно: <b class="bad" id="sBad">0</b></div>
-      <div class="timer-badge" id="timerDisplay">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-        <span id="timerText">00:00</span>
-      </div>
+
+  <div class="card" id="settingsCard">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      Подключение
+    </h2>
+    <label>GitHub Token</label>
+    <input type="password" class="setting-input" id="tokenInput" placeholder="github_pat_..." autocomplete="off">
+    <label>Репозиторий (owner/repo)</label>
+    <input type="text" class="setting-input" id="repoInput" placeholder="username/my-tests" autocomplete="off">
+    <div class="row">
+      <button class="btn btn-accent" id="saveSettingsBtn">Подключиться</button>
+      <button class="btn btn-dark" id="logoutBtn">Стереть токен</button>
     </div>
-    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="status-msg" id="settingsMsg"></div>
   </div>
 
-  <div class="nav-container">
-    <div class="nav-grid" id="navGrid"></div>
+  <div class="card hidden" id="titleCard">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+      Название сайта
+    </h2>
+    <input type="text" class="setting-input" id="siteTitleInput" placeholder="Например: Мои тесты">
+    <button class="btn btn-accent" id="saveTitleBtn">Сохранить название</button>
+    <div class="status-msg" id="titleMsg"></div>
   </div>
 
-  <div class="swipe-container" id="swipeContainer">
-    <div id="quizArea" style="display:flex; width:100%;"></div>
+  <div class="card hidden" id="addCard">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      Добавление зачёта
+    </h2>
+    
+    <label>1. Вуз</label>
+    <div class="row">
+      <select id="selUniversity"><option value="">— Выберите ВУЗ —</option></select>
+      <input type="text" class="setting-input" id="newUniversityName" placeholder="Новый ВУЗ" style="margin-bottom:0;">
+      <button class="btn btn-dark" id="addUniversityBtn" style="flex:0;">Добавить</button>
+    </div>
+
+    <label>2. Факультет</label>
+    <div class="row">
+      <select id="selFaculty" disabled><option value="">— Выберите Факультет —</option></select>
+      <input type="text" class="setting-input" id="newFacultyName" placeholder="Новый Факультет" style="margin-bottom:0;">
+      <button class="btn btn-dark" id="addFacultyBtn" style="flex:0;" disabled>Добавить</button>
+    </div>
+
+    <label>3. Курс</label>
+    <div class="row">
+      <select id="selCourse" disabled><option value="">— Выберите Курс —</option></select>
+      <input type="text" class="setting-input" id="newCourseName" placeholder="Новый Курс" style="margin-bottom:0;">
+      <button class="btn btn-dark" id="addCourseBtn" style="flex:0;" disabled>Добавить</button>
+    </div>
+
+    <label>4. Предмет</label>
+    <div class="row">
+      <select id="selSubject" disabled><option value="">— Выберите Предмет —</option></select>
+      <input type="text" class="setting-input" id="newSubjectName" placeholder="Новый Предмет" style="margin-bottom:0;">
+      <button class="btn btn-dark" id="addSubjectBtn" style="flex:0;" disabled>Добавить</button>
+    </div>
+
+    <hr style="border-color:var(--border); margin: 20px 0;">
+
+    <label>5. Название зачёта</label>
+    <input type="text" class="setting-input" id="newTestTitle" placeholder="Например: Аттестация 26.11.2026">
+
+    <label>6. Вопросы (RAW)</label>
+    <textarea id="newTestRaw" placeholder="Иммунитет — это&#10;− способ питания клеток&#10;+ способность организма защищаться...&#10;&#10;Следующий вопрос...&#10;− вариант 1&#10;+ вариант 2"></textarea>
+    <div class="status-msg" id="liveValidationMsg" style="margin-top:-8px; margin-bottom:12px;"></div>
+    <div class="hint">Вопросы разделяются пустой строкой. Правильный ответ начинается с <b>+</b>, неправильные с <b>−</b> или <b>-</b>.</div>
+
+    <div class="row">
+      <button class="btn btn-accent" id="addTestBtn">Сохранить в GitHub</button>
+      <button class="btn btn-dark" id="previewBtn">Проверить RAW</button>
+    </div>
+    <div class="status-msg" id="addMsg"></div>
   </div>
+
+  <div class="card hidden" id="listCard">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+      Содержимое базы
+    </h2>
+    <div class="tree-box" id="treeBox"></div>
+    <div class="row" style="margin-top: 16px;">
+      <button class="btn btn-dark" id="reloadBtn">Обновить данные</button>
+      <button class="btn btn-dark" id="downloadJsonBtn">Скачать JSON</button>
+    </div>
+  </div>
+
 </div>
 
-<footer>
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M14.83 14.83a4 4 0 1 1 0-5.66"></path></svg>
-  <span>2026 Murad Khibievich. Все права защищены.</span>
-</footer>
-
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-<div class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <h3>Настройки теста</h3>
-    <button class="close-btn" id="closeSettingsBtn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-    </button>
-  </div>
-
-  <div class="setting-group">
-    <div class="setting-title">Сколько вопросов решать</div>
-    <div class="setting-row" style="gap: 8px;">
-      <button class="btn btn-dark" style="padding: 6px; flex: 1;" data-limit="all">Все</button>
-      <button class="btn btn-dark" style="padding: 6px; flex: 1;" data-limit="50">50</button>
-      <button class="btn btn-dark" style="padding: 6px; flex: 1;" data-limit="100">100</button>
-    </div>
-    <input type="number" class="setting-input" id="sideQCount" min="1" placeholder="Свое число" style="margin-top: 8px;">
-    <div class="setting-hint">Максимум: <span id="sideMaxQ"></span> (всего в базе).</div>
-  </div>
-
-  <div class="setting-group">
-    <div class="setting-title">Таймер теста (мин)</div>
-    <input type="number" class="setting-input" id="testTimerInput" value="15" min="1" max="180" placeholder="Минут">
-    <div class="timer-controls">
-      <button class="btn" id="btnStartTimer">Старт</button>
-      <button class="btn btn-dark" id="btnStopTimer">Стоп</button>
-      <button class="btn btn-dark" id="btnResetTimer">Сброс</button>
-    </div>
-  </div>
-
-  <div class="setting-group">
-    <div class="setting-title">Таймер на вопрос (сек)</div>
-    <input type="number" class="setting-input" id="questionTimerInput" value="0" min="0" max="600" placeholder="0 = выключен">
-    <div class="setting-hint">0 — без ограничения по времени на вопрос.</div>
-  </div>
-
-  <div class="setting-group">
-    <div class="setting-title">Параметры</div>
-    <label class="setting-row">
-      <input type="checkbox" id="chkAnswerNow" checked>
-      ответ сразу
-    </label>
-    <label class="setting-row">
-      <input type="checkbox" id="chkShuffleQ">
-      перемешивать вопросы
-    </label>
-    <label class="setting-row">
-      <input type="checkbox" id="chkShuffleA">
-      перемешивать варианты
-    </label>
-  </div>
-
-  <div class="setting-group">
-    <div class="setting-title">Действия</div>
-    <button class="btn" style="width:100%;margin-bottom:8px" id="btnRestart">Начать заново (с учетом настроек)</button>
-    
-    <button class="btn btn-dark" style="width:100%;margin-bottom:8px" id="btnToggleShuffleQ">Перемешать вопросы</button>
-    <button class="btn btn-dark" style="width:100%;margin-bottom:8px" id="btnToggleShuffleA">Перемешать варианты</button>
-    <button class="btn btn-dark" style="width:100%;margin-bottom:8px" id="btnReshuffle">Пересоздать порядок вопросов</button>
-    
-    <button class="btn btn-dark" style="width:100%;margin-bottom:8px" id="btnOnlyFav">Только избранные</button>
-    
-    <button class="btn btn-dark" style="width:100%;margin-bottom:8px; border-color: var(--bad); color: var(--bad);" id="btnFinishSidebar">Завершить тест досрочно</button>
-
-    <button class="btn btn-dark" style="width:100%" id="btnClearFav">Очистить избранное</button>
-  </div>
-</div>
-
-<!-- Универсальное модальное окно -->
 <div class="modal-overlay" id="uiModal">
   <div class="modal" id="uiModalBox">
-    <div class="modal-icon" id="uiModalIcon"></div>
     <div class="modal-title" id="uiModalTitle"></div>
-    <div class="modal-text" id="uiModalText"></div>
+    <div class="modal-body" id="uiModalBody"></div>
     <div class="modal-actions" id="uiModalActions"></div>
   </div>
 </div>
 
+<!-- Оверлей загрузки -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Сохранение в GitHub...</div>
+</div>
+
 <script>
 /* ============================================================
-   ДАННЫЕ ТЕСТОВ — вставьте свой полный RAW
+   КОНФИГ
    ============================================================ */
-const RAW = `Иммунитет — это
-− способ питания клеток
-− процесс свёртывания крови
-+ способность организма защищаться от генетически чужеродных агентов и поддерживать постоянство внутренней среды
-− реакция только на бактерии
-
-Врождённый (неспецифический) иммунитет характеризуется
-+ немедленной готовностью, отсутствием специфичности и памяти
-− формированием клеток памяти
-− медленным развитием при первой встрече
-− синтезом специфических антител
-
-Адаптивный (приобретённый) иммунитет характеризуется
-− отсутствием специфичности
-− врождённой готовностью без обучения
-− независимостью от лимфоцитов
-+ специфичностью, формированием памяти и более быстрым вторичным ответом
-
-Иммунитет после перенесённого инфекционного заболевания является
-− искусственным активным
-− искусственным пассивным
-+ естественным активным
-− видовым
-
-Иммунитет новорождённого за счёт материнских IgG, полученных через плаценту, — это
-+ естественный пассивный
-− искусственный активный
-− искусственный пассивный
-− видовой
-
-Иммунитет после вакцинации является
-− естественным пассивным
-+ искусственным активным
-− естественным активным
-− видовым
-
-К механическим (барьерным) факторам неспецифической защиты относятся
-− интерфероны
-+ неповреждённые кожа и слизистые оболочки, мукоцилиарный клиренс
-− антитела
-− Т-лимфоциты
-
-Лизоцим слюны относится к
-− специфическим факторам защиты
-− антителам
-+ гуморальным факторам неспецифической защиты
-− клеточным факторам адаптивного иммунитета
-
-К клеточным факторам врождённого иммунитета относятся
-− плазматические клетки
-+ фагоциты (нейтрофилы, макрофаги) и NK-клетки
-− только В-лимфоциты
-− Т-хелперы
-
-К центральным органам иммунной системы относятся
-− селезёнка и лимфатические узлы
-− миндалины и пейеровы бляшки
-+ красный костный мозг и тимус
-− слюнные железы
-
-Общим маркёром зрелых Т-лимфоцитов является
-+ CD3
-− CD19
-− CD56
-− CD14
-
-NK-клетки осуществляют
-− синтез антител
-− презентацию антигена
-+ уничтожение опухолевых и вирус-инфицированных клеток без предварительной сенсибилизации
-− выработку гистамина
-
-Интерфероны I типа являются фактором защиты прежде всего против
-− гельминтов
-− внеклеточных бактерий
-+ вирусов
-− грибов
-
-Основным фактором местного (мукозального) иммунитета полости рта среди антител является
-− IgG сыворотки
-− IgM
-+ секреторный IgA
-− IgE
-
-Видовой (наследственный) иммунитет — это:
-+ невосприимчивость одного биологического вида к возбудителям болезней другого вида
-− иммунитет после вакцинации
-− иммунитет после болезни
-− пассивный иммунитет
-
-Защиту организма от генетически чужеродных агентов обеспечивает
-− эндокринная система
-+ иммунная система
-− только нервная система
-− система крови вне иммунитета
-
-По происхождению различают иммунитет
-− только клеточный и гуморальный
-− только активный
-+ врождённый и приобретённый (адаптивный)
-− только местный
-
-Приобретённый иммунитет при введении готовых антител (сыворотки, иммуноглобулина) является
-− естественным активным
-− искусственным активным
-− видовым
-+ искусственным пассивным
-
-К периферическим органам иммунной системы относятся
-− тимус и костный мозг
-+ селезёнка, лимфатические узлы, лимфоидная ткань слизистых
-− только тимус
-− печень и почки
-
-Созревание В-лимфоцитов у взрослого человека происходит в
-− тимусе
-+ красном костном мозге
-− селезёнке
-− лимфатических узлах
-
-К гуморальным факторам неспецифической (врождённой) защиты относятся
-− антитела и Т-клеточный рецептор
-+ лизоцим, система комплемента, интерфероны
-− только иммуноглобулины
-− CD-маркёры
-
-Нормальная микрофлора полости рта и кишечника выполняет защитную функцию за счёт
-− синтеза антител
-− активации комплемента
-+ колонизационной резистентности (конкуренции с патогенами)
-− фагоцитоза
-
-Опсонизация — это
-− прямой лизис бактерий
-− склеивание эритроцитов
-− блокада рецепторов
-+ усиление фагоцитоза за счёт покрытия микроба антителами или C3b
-
-Маркёром Т-хелперов является:
-− CD8
-+ CD4
-− CD19
-− CD56
-
-Специфичность и иммунологическая память характерны для:
-− врождённого иммунитета
-− барьерных факторов
-+ адаптивного (приобретённого) иммунитета
-− системы комплемента
-
-Воспаление как защитная реакция направлено на:
-− распространение возбудителя
-+ локализацию и уничтожение повреждающего агента и восстановление ткани
-− подавление фагоцитоза
-− синтез IgE
-
-К факторам местного иммунитета полости рта относятся:
-+ секреторный IgA, лизоцим слюны, лактоферрин
-− только IgG сыворотки
-− только Т-киллеры
-− эритроциты
-
-Иммунитет, приобретённый естественным путём после перенесённой инфекции, является:
-− искусственным
-− пассивным
-− видовым
-+ активным
-
-Фагоцитоз как фактор защиты впервые был описан:
-− Л. Пастером
-+ И. И. Мечниковым
-− П. Эрлихом
-− Э. Дженнером
-
-Самыми многочисленными лейкоцитами периферической крови взрослого человека являются:
-− лимфоциты
-− моноциты
-+ нейтрофилы
-− эозинофилы
-
-Врождённый иммунитет — это защита, которая:
-− формируется только после болезни
-+ есть с рождения и срабатывает сразу
-− требует вакцинации
-− зависит от антител
-
-Фагоцитоз — это:
-+ захват и переваривание микробов клеткой
-− выработка антител
-− свёртывание крови
-− синтез гистамина
-
-Главные клетки-фагоциты:
-− эритроциты
-− тромбоциты
-+ нейтрофилы и макрофаги
-− плазматические клетки
-
-Система комплемента — это:
-− вид лейкоцитов
-+ группа белков крови, помогающих уничтожать микробы
-− гормоны
-− антитела
-
-Один из эффектов комплемента:
-+ разрушение (лизис) микробной клетки
-− свёртывание крови
-− перенос кислорода
-− синтез инсулина
-
-Воспаление сопровождается:
-− только зудом
-− снижением температуры
-+ покраснением, отёком, болью и повышением температуры
-− отсутствием изменений
-
-Лизоцим разрушает:
-− вирусы
-+ клеточную стенку бактерий
-− эритроциты
-− собственные клетки
-
-Интерфероны защищают прежде всего от:
-− бактерий
-+ вирусов
-− гельминтов
-− грибов
-
-Распознавание микробов во врождённом иммунитете происходит с помощью рецепторов:
-− инсулиновых
-+ TLR (образраспознающих)
-− антител
-− гормональных
-
-Повышение температуры (лихорадка) при инфекции:
-+ помогает защите организма
-− всегда вредно
-− не влияет на микробы
-− снижает иммунитет
-
-Барьерную защиту обеспечивают:
-− эритроциты
-− тромбоциты
-+ кожа и слизистые оболочки
-− гормоны
-
-Макрофаги образуются из:
-− лимфоцитов
-+ моноцитов
-− эритроцитов
-− тромбоцитов
-
-Цитокины — это:
-+ белки, через которые клетки управляют иммунитетом
-− антитела
-− гормоны поджелудочной железы
-− ферменты желудка
-
-Белок острой фазы воспаления:
-− гемоглобин
-+ С-реактивный белок
-− инсулин
-− альбумин
-
-В слюне антибактериальное действие оказывает:
-+ лизоцим
-− инсулин
-− гемоглобин
-− адреналин
-
-Факторы врождённого иммунитета работают:
-− только после прививки
-+ быстро и против многих микробов сразу
-− только против вирусов
-− медленно и строго специфично
-
-К фагоцитам относятся:
-+ нейтрофилы и макрофаги
-− эритроциты
-− тромбоциты
-− плазматические клетки
-
-NK-клетки уничтожают:
-− только бактерии
-+ опухолевые и заражённые вирусом клетки
-− эритроциты
-− антитела
-
-Комплемент может:
-+ разрушать микробы и усиливать фагоцитоз
-− переносить кислород
-− свёртывать кровь
-− вырабатывать инсулин
-
-Какой признак НЕ относится к воспалению:
-− покраснение
-− отёк
-− боль
-+ понижение температуры
-
-Интерферон вырабатывается в ответ на:
-+ вирусную инфекцию
-− переедание
-− анемию
-− перелом
-
-Кожа и слизистые — это защита:
-− специфическая
-+ барьерная (неспецифическая)
-− гуморальная адаптивная
-− клеточная адаптивная
-
-Лизоцим содержится в:
-+ слюне, слезах, слизи
-− костях
-− только в крови
-− мышцах
-
-Фагоцитоз начинается с:
-− переваривания
-+ приближения фагоцита к микробу
-− деления клетки
-− синтеза антител
-
-Отёк губ и языка при наследственном ангионевротическом отёке связан с нарушением:
-+ системы комплемента
-− эритроцитов
-− тромбоцитов
-− инсулина
-
-Повышение С-реактивного белка указывает на:
-− аллергию
-+ воспаление
-− анемию
-− норму
-
-Клетки, выделяющие гистамин при воспалении и аллергии:
-− эритроциты
-− нейтрофилы
-+ тучные клетки
-− тромбоциты
-
-«Респираторный взрыв» в фагоците нужен для:
-− дыхания человека
-+ уничтожения микроба активными формами кислорода
-− свёртывания крови
-− синтеза антител
-
-Воспаление — это реакция:
-+ защитная
-− только вредная
-− не связанная с иммунитетом
-− всегда аллергическая
-
-К врождённому иммунитету НЕ относятся:
-− фагоцитоз
-− комплемент
-+ специфические антитела и память
-− лизоцим
-
-Антиген — это:
-+ вещество, которое организм распознаёт как чужое и на которое отвечает иммунитет
-− вид лейкоцита
-− гормон
-− фермент
-
-Антитела вырабатывают:
-− эритроциты
-+ плазматические клетки (из В-лимфоцитов)
-− нейтрофилы
-− тромбоциты
-
-Главную роль в клеточном иммунитете играют:
-+ Т-лимфоциты
-− эритроциты
-− тромбоциты
-− тучные клетки
-
-Молекулы MHC (HLA) нужны для:
-− переноса кислорода
-+ представления антигена Т-лимфоцитам
-− свёртывания крови
-− синтеза гормонов
-
-Антиген Т-лимфоциту представляют:
-− эритроциты
-+ антигенпрезентирующие клетки (дендритные, макрофаги)
-− тромбоциты
-− мышечные клетки
-
-Самые мощные антигенпрезентирующие клетки:
-+ дендритные клетки
-− эритроциты
-− тромбоциты
-− нейтрофилы
-
-Т-хелперы помогают:
-− только свёртыванию крови
-+ активировать В-лимфоциты и другие клетки иммунитета
-− переносу кислорода
-− пищеварению
-
-При первой встрече с антигеном иммунный ответ:
-− быстрый и сильный
-+ медленный, антител мало
-− отсутствует
-− только клеточный
-
-При повторной встрече с тем же антигеном ответ:
-+ быстрый и сильный за счёт клеток памяти
-− медленнее первого
-− отсутствует
-− такой же, как первый
-
-Клетки памяти обеспечивают:
-+ быструю защиту при повторном заражении
-− свёртывание крови
-− перенос кислорода
-− выработку гормонов
-
-Главный фактор роста активированных Т-лимфоцитов:
-− гемоглобин
-+ IL-2 (интерлейкин-2)
-− инсулин
-− адреналин
-
-Для полной активации Т-лимфоцита нужны:
-− один сигнал
-+ распознавание антигена и дополнительный (костимуляционный) сигнал
-− только гормоны
-− только антитела
-
-Специфичность иммунного ответа означает, что:
-+ антитело или Т-клетка узнаёт определённый антиген
-− ответ одинаков на всё
-− ответа нет
-− реагируют только эритроциты
-
-Иммунная память формируется:
-− только во врождённом иммунитете
-+ в адаптивном иммунитете
-− в системе комплемента
-− в эритроцитах
-
-Главные клетки адаптивного иммунитета:
-+ Т- и В-лимфоциты
-− эритроциты
-− тромбоциты
-− только нейтрофилы
-
-Эпитоп — это:
-+ участок антигена, который узнаёт антитело
-− вид клетки
-− гормон
-− фермент
-
-MHC I класса есть на:
-+ всех ядерных клетках организма
-− только на эритроцитах
-− только на бактериях
-− только на нейронах
-
-MHC II класса есть в основном на:
-− эритроцитах
-+ антигенпрезентирующих клетках
-− мышечных клетках
-− нейронах
-
-CD8-лимфоциты (Т-киллеры) распознают антиген вместе с:
-− MHC II
-+ MHC I
-− антителами
-− комплементом
-
-CD4-лимфоциты (Т-хелперы) распознают антиген вместе с:
-− MHC I
-+ MHC II
-− комплементом
-− эритроцитами
-
-Гены MHC (HLA) у человека расположены на:
-+ 6-й хромосоме
-− 1-й хромосоме
-− X-хромосоме
-− 21-й хромосоме
-
-Антитела — это продукт:
-− Т-киллеров
-+ В-лимфоцитов (плазматических клеток)
-− эритроцитов
-− тромбоцитов
-
-Гуморальный иммунитет связан прежде всего с:
-+ антителами
-− Т-киллерами
-− фагоцитозом
-− только комплементом
-
-Клеточный иммунитет связан прежде всего с:
-− антителами
-+ Т-лимфоцитами
-− эритроцитами
-− тромбоцитами
-
-Вторичный иммунный ответ по сравнению с первичным:
-+ быстрее и сильнее
-− медленнее
-− слабее
-− отсутствует
-
-Наивный лимфоцит — это лимфоцит, который:
-+ ещё не встречался со своим антигеном
-− уже выработал антитела
-− погиб
-− превратился в эритроцит
-
-Антигенпрезентирующие клетки «показывают» антиген в комплексе с:
-− гемоглобином
-+ молекулами MHC
-− инсулином
-− комплементом
-
-Главную помощь в иммунном ответе оказывают:
-+ Т-хелперы (CD4)
-− эритроциты
-− тромбоциты
-− нейтрофилы
-
-Иммунный ответ, при котором образуются антитела, называют:
-+ гуморальным
-− барьерным
-− только клеточным
-− видовым
-
-Встреча наивных лимфоцитов с антигеном происходит в основном в:
-− костном мозге
-+ периферических лимфоидных органах (лимфоузлы, селезёнка)
-− крови
-− коже
-
-Антитела по-другому называются:
-+ иммуноглобулины
-− интерфероны
-− комплемент
-− цитокины
-
-Молекула антитела состоит из:
-+ двух тяжёлых и двух лёгких цепей
-− одной цепи
-− пяти лёгких цепей
-− только тяжёлых цепей
-
-Антиген связывается с антителом в области:
-− Fc-фрагмента
-− шарнира
-+ Fab-фрагмента (переменной части)
-− только лёгкой цепи
-
-Всего классов иммуноглобулинов:
-− три
-+ пять (IgG, IgM, IgA, IgE, IgD)
-− два
-− десять
-
-Самый большой иммуноглобулин (пентамер):
-− IgG
-+ IgM
-− IgA
-− IgE
-
-Через плаценту от матери к плоду проходит:
-− IgM
-− IgA
-+ IgG
-− IgE
-
-Главный иммуноглобулин слюны и секретов:
-− IgG
-+ секреторный IgA
-− IgM
-− IgD
-
-Больше всего в сыворотке крови:
-− IgM
-+ IgG
-− IgE
-− IgD
-
-IgE участвует в:
-+ аллергических реакциях
-− переносе кислорода
-− свёртывании крови
-− пищеварении
-
-Нейтрализация — это способность антител:
-− переносить кислород
-− свёртывать кровь
-+ блокировать вирус или токсин
-− синтезировать гормоны
-
-Опсонизация антителами означает:
-+ усиление фагоцитоза микроба
-− свёртывание крови
-− лизис эритроцитов
-− синтез гормонов
-
-Лучше всех активирует комплемент:
-− IgG4
-+ IgM
-− IgD
-− IgE
-
-При острой инфекции первыми появляются антитела класса:
-− IgG
-− IgA
-+ IgM
-− IgE
-
-Позже и надолго появляются антитела класса:
-− IgM
-+ IgG
-− IgE
-− IgD
-
-Fc-фрагмент антитела отвечает за:
-− связывание антигена
-− специфичность
-− переменную часть
-+ эффекторные функции (связь с клетками и комплементом)
-
-Иммуноглобулины вырабатывают:
-− эритроциты
-+ плазматические клетки
-− тромбоциты
-− нейтрофилы
-
-Fab-фрагмент антитела:
-+ связывает антиген
-− связывает комплемент
-− переносит кислород
-− не имеет функции
-
-Главный иммуноглобулин сыворотки крови:
-− IgE
-− IgD
-+ IgG
-− IgM
-
-IgA в большом количестве содержится в:
-− костях
-+ слюне и других секретах
-− мышцах
-− только в крови
-
-Антитело, связанное с аллергией и защитой от гельминтов:
-− IgG
-− IgM
-− IgD
-+ IgE
-
-Лёгкие цепи антител бывают типов:
-+ каппа и лямбда
-− альфа и бета
-− гамма и мю
-− только один тип
-
-Какой иммуноглобулин первым образуется при первичном ответе:
-− IgG
-+ IgM
-− IgA
-− IgE
-
-Антитела обеспечивают иммунитет:
-− только барьерный
-− только клеточный
-+ гуморальный
-− видовой
-
-Материнские антитела защищают новорождённого — это пример иммунитета:
-− активного
-+ пассивного
-− видового
-− клеточного
-
-Основная функция антител:
-+ распознавание и связывание антигена
-− перенос кислорода
-− выработка гормонов
-− пищеварение
-
-Нейтрализация токсинов — функция:
-− эритроцитов
-− тромбоцитов
-+ антител
-− комплемента
-
-Класс иммуноглобулина определяется:
-+ тяжёлой цепью
-− лёгкой цепью
-− размером антигена
-− видом клетки
-
-Переменная часть антитела нужна для:
-− эффекторных функций
-+ связывания конкретного антигена
-− переноса кислорода
-− свёртывания крови
-
-Антитела класса IgG способны:
-− переносить кислород
-− только оставаться в слюне
-+ проходить через плаценту
-− свёртывать кровь
-
-Сыворотку (готовые антитела) вводят, чтобы:
-+ быстро защитить при угрозе инфекции
-− сформировать долгую память
-− заменить вакцину навсегда
-− вызвать аллергию
-
-Главные клетки клеточного иммунитета:
-− эритроциты
-+ Т-лимфоциты
-− тромбоциты
-− тучные клетки
-
-Т-киллеры (CD8) уничтожают:
-+ заражённые вирусом и опухолевые клетки
-− эритроциты
-− тромбоциты
-− антитела
-
-Т-хелперы несут маркёр:
-− CD8
-− CD19
-+ CD4
-− CD56
-
-Т-киллеры несут маркёр:
-− CD4
-+ CD8
-− CD19
-− CD56
-
-Th1-клетки активируют:
-− эритроциты
-− тромбоциты
-− свёртывание крови
-+ макрофаги для борьбы с внутриклеточными микробами
-
-Th2-клетки важны в защите от:
-+ гельминтов и в аллергии
-− переломов
-− анемии
-− свёртывания крови
-
-Регуляторные Т-клетки (Treg):
-− усиливают аллергию всегда
-+ подавляют и регулируют иммунный ответ
-− переносят кислород
-− свёртывают кровь
-
-Перфорин Т-киллера:
-− переносит кислород
-− синтезирует антитела
-+ образует поры в мембране клетки-мишени
-− свёртывает кровь
-
-Главный цитокин Th1:
-+ IFN-γ (интерферон-гамма)
-− IL-4
-− IL-5
-− гистамин
-
-Апоптоз — это:
-− деление клетки
-+ запрограммированная гибель клетки
-− перенос кислорода
-− свёртывание крови
-
-Проба Манту (замедленная гиперчувствительность) связана с:
-− эритроцитами
-− тромбоцитами
-+ Т-лимфоцитами
-− только антителами
-
-Хроническое воспаление с гранулёмами (туберкулёз) связано с:
-+ Th1 и макрофагами
-− IgE
-− эритроцитами
-− комплементом
-
-NK-клетки, в отличие от Т-киллеров:
-− вырабатывают антитела
-+ действуют без предварительной сенсибилизации
-− переносят кислород
-− свёртывают кровь
-
-Клетки памяти в клеточном иммунитете обеспечивают:
-− перенос кислорода
-− свёртывание крови
-+ быстрый ответ при повторной встрече
-− выработку гормонов
-
-Через систему Fas/FasL клетка-мишень:
-+ погибает (апоптоз)
-− делится
-− переносит кислород
-− синтезирует антитела
-
-Т-лимфоциты созревают в:
-+ тимусе
-− селезёнке
-− печени
-− коже
-
-Какой цитокин вырабатывают Th1:
-− IL-4
-+ IFN-γ
-− IL-5
-− гистамин
-
-Th2-клетки вырабатывают:
-− IFN-γ
-− перфорин
-+ IL-4 и IL-5
-− лизоцим
-
-Главная функция Т-киллеров:
-+ уничтожение заражённых и опухолевых клеток
-− выработка антител
-− перенос кислорода
-− свёртывание крови
-
-Регуляторные Т-клетки нужны, чтобы:
-− усиливать воспаление
-− переносить кислород
-+ не допускать избыточного и аутоиммунного ответа
-− свёртывать кровь
-
-Гранзимы Т-киллера:
-+ запускают апоптоз клетки-мишени
-− переносят кислород
-− синтезируют гормоны
-− свёртывают кровь
-
-Маркёр Т-хелперов:
-− CD8
-+ CD4
-− CD19
-− CD56
-
-Маркёр Т-киллеров:
-− CD4
-− CD19
-+ CD8
-− CD56
-
-Th17-клетки важны в защите от:
-+ грибов (Candida) и некоторых бактерий на слизистых
-− переломов
-− анемии
-− кислородного голодания
-
-Два главных способа убийства клетки Т-киллером:
-− фагоцитоз и пиноцитоз
-+ перфорин/гранзимы и Fas/FasL
-− комплемент и опсонизация
-− IgG и IgA
-
-Клеточный иммунитет особенно важен против:
-+ внутриклеточных микробов и вирусов
-− только токсинов
-− только аллергенов
-− переломов
-
-Макрофаги, активированные Th1:
-− переносят кислород
-− свёртывают кровь
-+ лучше убивают захваченные микробы
-− синтезируют инсулин
-
-Клетки памяти обеспечивают:
-+ быстрый повторный ответ
-− перенос кислорода
-− свёртывание крови
-− выработку гормонов
-
-Главные клетки клеточного иммунитета:
-− эритроциты
-+ Т-лимфоциты
-− тромбоциты
-− тучные клетки
-
-Проба Манту — пример реакции:
-− немедленного типа
-− гуморальной
-+ замедленного (Т-клеточного) типа
-− аллергии I типа`;
-
-function parse(raw){
-  const blocks = raw.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+const STORAGE_KEY = 'gh_test_admin_cfg_v6';
+let cfg = { token: '', repo: '' };
+let DATA = { siteTitle: 'Тесты', universities: [] };
+let currentPath = { ui: null, fi: null, ci: null, si: null };
+
+function $(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function uid(prefix) {
+  return prefix + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,6);
+}
+
+/* ============================================================
+   SVG-ИКОНКИ
+   ============================================================ */
+const ICONS = {
+  uni: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>',
+  fac: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>',
+  course: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>',
+  subj: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>',
+  file: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>',
+  trash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>',
+  edit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>',
+  download: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>',
+  ok: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+  err: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>'
+};
+
+/* ============================================================
+   УТИЛИТЫ
+   ============================================================ */
+function showMsg(el, text, ok) {
+  if (!el) return;
+  el.innerHTML = (ok ? ICONS.ok : ICONS.err) + '<span>' + esc(text) + '</span>';
+  el.className = 'status-msg ' + (ok ? 'ok' : 'err');
+  if (ok) {
+    setTimeout(() => {
+      el.className = 'status-msg';
+      el.innerHTML = '';
+    }, 3500);
+  }
+}
+
+function showLoading(text = 'Сохранение в GitHub...') {
+  $('loadingOverlay').querySelector('.loading-text').textContent = text;
+  $('loadingOverlay').classList.add('show');
+}
+
+function hideLoading() {
+  $('loadingOverlay').classList.remove('show');
+}
+
+/* ============================================================
+   GITHUB API
+   ============================================================ */
+async function ghFetch(url, opts = {}) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 25000);
+  try {
+    return await fetch(url, {
+      ...opts, signal: ctrl.signal,
+      headers: {
+        'Authorization': `Bearer ${cfg.token}`,
+        'Accept': 'application/vnd.github+json',
+        ...(opts.headers || {})
+      }
+    });
+  } finally { clearTimeout(timer); }
+}
+
+async function ghGetFile(path) {
+  const url = `https://api.github.com/repos/${cfg.repo}/contents/${path}`;
+  const res = await ghFetch(url);
+  if (res.status === 404) return { content: null, sha: null };
+  if (!res.ok) throw new Error(`GET ${path} — ${res.status}`);
+  const data = await res.json();
+  const bin = atob(data.content.replace(/\n/g, ''));
+  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+  return { content: new TextDecoder().decode(bytes), sha: data.sha };
+}
+
+async function ghPutFile(path, content, sha, message) {
+  const url = `https://api.github.com/repos/${cfg.repo}/contents/${path}`;
+  const bytes = new TextEncoder().encode(content);
+  let bin = '';
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  const res = await ghFetch(url, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: message || `update ${path}`,
+      content: btoa(bin),
+      sha: sha || undefined
+    })
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`PUT ${path} — ${res.status}. ${t.slice(0, 150)}`);
+  }
+  return res.json();
+}
+
+/* ============================================================
+   ЗАГРУЗКА/СОХРАНЕНИЕ
+   ============================================================ */
+async function loadData() {
+  const { content } = await ghGetFile('XDataBase.json');
+  if (!content) return { siteTitle: 'Тесты', universities: [] };
+  const raw = JSON.parse(content);
+
+  if (raw.subjects && !raw.universities) {
+    return { siteTitle: raw.siteTitle || 'Тесты', universities: [] }; 
+  }
+
+  return {
+    siteTitle: raw.siteTitle || 'Тесты',
+    universities: Array.isArray(raw.universities) ? raw.universities : []
+  };
+}
+
+async function saveData() {
+  showLoading('Сохранение в GitHub...');
+  try {
+    const { sha } = await ghGetFile('XDataBase.json');
+    await ghPutFile(
+      'XDataBase.json',
+      JSON.stringify(DATA, null, 2),
+      sha,
+      'Обновление базы тестов'
+    );
+  } finally {
+    hideLoading();
+  }
+}
+
+/* ============================================================
+   ПАРСЕР RAW (валидация)
+   ============================================================ */
+function parseRaw(rawText) {
+  const blocks = rawText.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
   const out = [];
   blocks.forEach(block => {
     const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
@@ -1257,783 +479,757 @@ function parse(raw){
     const q = lines[0];
     const opts = [];
     let correct = -1;
-    for (let i = 1; i < lines.length; i++){
+    for (let i = 1; i < lines.length; i++) {
       const l = lines[i];
       if (l.startsWith('+')) { correct = opts.length; opts.push(l.slice(1).trim()); }
       else if (l.startsWith('−') || l.startsWith('-')) { opts.push(l.slice(1).trim()); }
     }
-    if (q && opts.length && correct >= 0) out.push({ q, opts, correct });
+    if (q && opts.length) out.push({ q, opts, correct });
   });
   return out;
 }
 
-const QUESTIONS = parse(RAW);
-const TOTAL = QUESTIONS.length;
-const LS_KEY = 'immuno_test_final_v4';
-
-let state = {
-  answers: {},
-  favorites: {},
-  settings: { 
-    answerNow: true, 
-    shuffleQ: false, 
-    shuffleA: false, 
-    testTimerMinutes: 15,
-    questionLimit: TOTAL,
-    questionTimerSec: 0,
-    frozenOrder: null
-  },
-  session: null
-};
-
-let timerInterval = null;
-let questionInterval = null;
-let questionTimeLeft = 0;
-let timeRemaining = 0;
-
-/* ---------- PERSISTENCE ---------- */
-function loadState(){
-  try {
-    const s = JSON.parse(localStorage.getItem(LS_KEY));
-    if (s) {
-      state = { ...state, ...s, settings: { ...state.settings, ...s.settings } };
-      if (s.session && s.session.order && s.session.order.length) {
-        state.session = s.session;
-        timeRemaining = s.session.timeRemaining || state.settings.testTimerMinutes * 60;
-      } else {
-        state.session = null;
-      }
-    }
-  } catch(e){}
-}
-function saveState(){
-  try {
-    const toSave = { 
-      answers: state.answers, 
-      favorites: state.favorites, 
-      settings: state.settings,
-      session: state.session ? {
-        order: state.session.order,
-        pos: state.session.pos,
-        answers: state.session.answers,
-        mode: state.session.mode,
-        qShuffledOpts: state.session.qShuffledOpts || {},
-        timeRemaining: timeRemaining
-      } : null
-    };
-    localStorage.setItem(LS_KEY, JSON.stringify(toSave));
-  } catch(e){}
-}
-loadState();
-
-function shuffle(arr){
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-function fmtTime(sec){
-  const m = Math.floor(sec/60), s = sec%60;
-  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-}
-
-const ICON_STAR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
-const ICON_STAR_FILLED = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
-const ICON_ARROW_RIGHT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
-const ICON_CLOSE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
-
-function updateStats(){
-  const answered = Object.keys(state.answers).length;
-  let good = 0, bad = 0;
-  for (const k in state.answers){
-    if (state.answers[k].correct) good++; else bad++;
-  }
-  document.getElementById('sAns').textContent = answered;
-  document.getElementById('sTot').textContent = TOTAL;
-  document.getElementById('sGood').textContent = good;
-  document.getElementById('sBad').textContent = bad;
-  
-  const pct = TOTAL ? (answered / TOTAL * 100) : 0;
-  document.getElementById('progressFill').style.width = pct + '%';
-  
-  if (state.session) renderNavGrid();
-}
-
-function renderNavGrid(){
-  const grid = document.getElementById('navGrid');
-  grid.innerHTML = '';
-  if (!state.session) return;
-  
-  const showAnswerNow = state.settings.answerNow;
-
-  state.session.order.forEach((qIndex, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'nav-btn';
-    if (i === state.session.pos) btn.classList.add('active');
-    
-    btn.textContent = qIndex + 1;
-    
-    const ans = state.session.answers[qIndex];
-    if (ans !== undefined && ans !== null){
-      if (showAnswerNow) {
-        if (ans === QUESTIONS[qIndex].correct) btn.classList.add('good');
-        else btn.classList.add('bad');
-      } else {
-        btn.classList.add('white-passed');
-      }
-    }
-
-    btn.onclick = () => {
-      const container = document.getElementById('swipeContainer');
-      container.scrollTo({ left: i * container.clientWidth, behavior: 'smooth' });
-      state.session.pos = i;
-      saveState();
-      renderNavGrid();
-    };
-    grid.appendChild(btn);
-  });
-}
-
-function renderAllQuestions(){
-  const area = document.getElementById('quizArea');
-  area.innerHTML = '';
-  
-  if (!state.session || state.session.pos >= state.session.order.length){
-    renderResult();
-    return;
-  }
-
-  const showAnswerNow = state.settings.answerNow;
-  const hasQuestionTimer = state.settings.questionTimerSec > 0;
-  
-  state.session.order.forEach((qIndex, idx) => {
-    const q = QUESTIONS[qIndex];
-    const answered = state.session.answers[qIndex] !== undefined && state.session.answers[qIndex] !== null;
-    const selected = state.session.answers[qIndex];
-    const isLast = idx === state.session.order.length - 1;
-    const isActive = idx === state.session.pos;
-    
-    let opts = q.opts.map((text, i) => ({ text, originalIdx: i }));
-    if (state.settings.shuffleA) {
-      if (!state.session.qShuffledOpts) state.session.qShuffledOpts = {};
-      if (!state.session.qShuffledOpts[qIndex]) state.session.qShuffledOpts[qIndex] = shuffle(opts);
-      opts = state.session.qShuffledOpts[qIndex];
-    }
-    
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-      <div class="q-header">
-        <div class="q-titles">
-          <div class="q-num">Вопрос ${idx + 1} из ${state.session.order.length}</div>
-          <div class="q-orig">Оригинал: №${qIndex + 1}</div>
-        </div>
-        <div class="q-header-actions">
-          <button class="star-btn ${state.favorites[qIndex]?'active':''}" data-fav="${qIndex}" title="В избранное">
-            ${state.favorites[qIndex] ? ICON_STAR_FILLED : ICON_STAR}
-          </button>
-          <button class="finish-btn" data-finish="1" title="Завершить тест">
-            ${ICON_CLOSE}
-          </button>
-        </div>
-      </div>
-      ${hasQuestionTimer && isActive ? `<div class="question-timer" id="questionTimer"><span>${state.settings.questionTimerSec} сек</span></div>` : ''}
-      <div class="q-text">${escapeHtml(q.q)}</div>
-      <div class="opts-list">
-        ${opts.map((opt) => {
-          let cls = 'opt';
-          const isSel = selected === opt.originalIdx;
-          const isCorrect = opt.originalIdx === q.correct;
-          if (answered && showAnswerNow) {
-            cls += ' disabled';
-            if (isCorrect) cls += ' correct';
-            else if (isSel) cls += ' wrong';
-          } else if (isSel) {
-            cls += ' selected';
-          }
-          return `<button class="${cls}" data-q="${qIndex}" data-orig="${opt.originalIdx}" ${answered && showAnswerNow ? 'disabled' : ''}>
-            <div class="opt-radio"></div>
-            <span>${escapeHtml(opt.text)}</span>
-          </button>`;
-        }).join('')}
-      </div>
-      <div class="actions">
-        ${!answered && showAnswerNow ? `<button class="btn btn-dark show-ans" data-q="${qIndex}">Показать ответ</button>` : ''}
-        <button class="btn next-btn" data-idx="${idx}">
-          ${isLast ? 'Завершить' : 'Вперёд ' + ICON_ARROW_RIGHT}
-        </button>
-      </div>
-    `;
-    area.appendChild(card);
-  });
-
-  area.querySelectorAll('.star-btn').forEach(btn => {
-    btn.onclick = () => {
-      const qi = Number(btn.dataset.fav);
-      if (state.favorites[qi]) delete state.favorites[qi];
-      else state.favorites[qi] = true;
-      saveState(); updateStats(); renderAllQuestions();
-    };
-  });
-
-  area.querySelectorAll('.finish-btn').forEach(btn => {
-    btn.onclick = async () => {
-      const ok = await uiConfirm({
-        title: 'Завершить тест?',
-        text: 'Текущие ответы сохранятся, но вернуться к вопросам будет нельзя.',
-        icon: 'danger',
-        okText: 'Завершить',
-        cancelText: 'Продолжить',
-        danger: true,
-      });
-      if (ok) renderResult();
-    };
-  });
-
-  area.querySelectorAll('.opt').forEach(btn => {
-    btn.onclick = () => {
-      const qi = Number(btn.dataset.q);
-      const origIdx = Number(btn.dataset.orig);
-      if (state.session.answers[qi] !== undefined && state.settings.answerNow) return;
-      
-      state.session.answers[qi] = origIdx;
-      state.answers[qi] = { selected: origIdx, correct: origIdx === QUESTIONS[qi].correct };
-      saveState();
-      
-      if (state.settings.answerNow) {
-        stopQuestionTimer();
-        renderAllQuestions();
-      } else {
-        area.querySelectorAll(`.opt[data-q="${qi}"]`).forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-      }
-      updateStats();
-    };
-  });
-
-  area.querySelectorAll('.show-ans').forEach(btn => {
-    btn.onclick = () => {
-      const qi = Number(btn.dataset.q);
-      state.session.answers[qi] = -1;
-      state.answers[qi] = { selected: -1, correct: false };
-      saveState();
-      stopQuestionTimer();
-      renderAllQuestions();
-    };
-  });
-
-  area.querySelectorAll('.next-btn').forEach(btn => {
-    btn.onclick = () => {
-      const idx = Number(btn.dataset.idx);
-      const container = document.getElementById('swipeContainer');
-      
-      if (idx < state.session.order.length - 1) {
-        container.scrollTo({ left: (idx + 1) * container.clientWidth, behavior: 'smooth' });
-        state.session.pos = idx + 1;
-        saveState();
-        renderNavGrid();
-      } else {
-        renderResult();
-      }
-    };
-  });
-
-  const container = document.getElementById('swipeContainer');
-  setTimeout(() => {
-    container.scrollTo({ left: state.session.pos * container.clientWidth, behavior: 'instant' });
-    startQuestionTimer();
-  }, 10);
-}
-
-/* ---------- QUESTION TIMER ---------- */
-function startQuestionTimer(){
-  stopQuestionTimer();
-  const el = document.getElementById('questionTimer');
-  if (!state.settings.questionTimerSec || !state.session || !el) return;
-  
-  questionTimeLeft = state.settings.questionTimerSec;
-  el.style.display = 'flex';
-  updateQuestionTimerUI();
-  
-  questionInterval = setInterval(() => {
-    questionTimeLeft--;
-    updateQuestionTimerUI();
-    if (questionTimeLeft <= 0) {
-      stopQuestionTimer();
-      autoFailCurrentQuestion();
-    }
-  }, 1000);
-}
-
-function stopQuestionTimer(){
-  clearInterval(questionInterval);
-  questionInterval = null;
-}
-
-function updateQuestionTimerUI(){
-  const el = document.getElementById('questionTimer');
-  if (!el) return;
-  el.querySelector('span').textContent = Math.max(0, questionTimeLeft) + ' сек';
-  el.classList.toggle('warn', questionTimeLeft <= 5);
-}
-
-function autoFailCurrentQuestion(){
-  if (!state.session) return;
-  const qi = state.session.order[state.session.pos];
-  if (state.session.answers[qi] !== undefined && state.session.answers[qi] !== null) return;
-  
-  state.session.answers[qi] = -1;
-  state.answers[qi] = { selected: -1, correct: false };
-  saveState();
-  updateStats();
-  
-  const container = document.getElementById('swipeContainer');
-  const next = state.session.pos + 1;
-  if (next < state.session.order.length) {
-    container.scrollTo({ left: next * container.clientWidth, behavior: 'smooth' });
-    state.session.pos = next;
-    saveState();
-    renderNavGrid();
-    renderAllQuestions();
-  } else {
-    renderResult();
-  }
-}
-
-document.getElementById('swipeContainer').addEventListener('scroll', function() {
-  if (!state.session) return;
-  const container = this;
-  clearTimeout(window.scrollTimeout);
-  window.scrollTimeout = setTimeout(() => {
-    const cardWidth = container.clientWidth;
-    const newPos = Math.round(container.scrollLeft / cardWidth);
-    if (state.session.pos !== newPos && newPos >= 0 && newPos < state.session.order.length) {
-      state.session.pos = newPos;
-      saveState();
-      renderNavGrid();
-      
-      const activeBtn = document.querySelector('.nav-btn.active');
-      if (activeBtn) {
-        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      }
-      
-      startQuestionTimer();
-    }
-  }, 100);
-});
-
-function renderResult(){
-  stopTimer();
-  stopQuestionTimer();
-  
-  let good = 0, bad = 0;
-  state.session.order.forEach(qi => {
-    const a = state.session.answers[qi];
-    if (a !== undefined && a !== null && a !== -1){
-      if (a === QUESTIONS[qi].correct) good++;
-      else bad++;
-    } else if (a === -1) bad++;
-  });
-  
-  const total = state.session.order.length;
-  const pct = total ? Math.round(good / total * 100) : 0;
-  const grade = pct >= 90 ? '5' : pct >= 75 ? '4' : pct >= 60 ? '3' : '2';
-  
-  const finishedSession = state.session;
-  state.session = null;
-  saveState();
-  
-  const area = document.getElementById('quizArea');
-  area.innerHTML = `
-    <div class="result">
-      <div style="font-size:15px;color:var(--muted)">Тест завершён</div>
-      <div class="grade">${grade}</div>
-      <div class="pct">${pct}% правильных</div>
-      <div class="result-stats">
-        <div>Верно: <b>${good}</b></div>
-        <div>Неверно: <b>${bad}</b></div>
-        <div>Время: <b>${fmtTime(timeRemaining)}</b></div>
-      </div>
-      <div class="actions" style="justify-content:center">
-        <button class="btn" id="resRestart">Пройти заново</button>
-        ${bad > 0 ? `<button class="btn btn-dark" id="resErrors">Повторить ошибки</button>` : ''}
-      </div>
-    </div>
-  `;
-  
-  document.getElementById('resRestart').onclick = () => startSession();
-  const errBtn = document.getElementById('resErrors');
-  if (errBtn) {
-    errBtn.onclick = () => {
-      const errs = finishedSession.order.filter(qi => {
-        const a = finishedSession.answers[qi];
-        return (a === undefined || a === null || a === -1 || a !== QUESTIONS[qi].correct);
-      });
-      if (errs.length) startSession(errs);
-    };
-  }
-  updateStats();
-  renderNavGrid();
-}
-
-function startSession(customOrder = null){
-  stopTimer();
-  stopQuestionTimer();
-  
-  let order = customOrder;
-  if (!order) {
-    if (state.settings.shuffleQ) {
-      if (!state.settings.frozenOrder || state.settings.frozenOrder.length !== TOTAL) {
-        state.settings.frozenOrder = shuffle(QUESTIONS.map((_, i) => i));
-      }
-      order = state.settings.frozenOrder.slice();
-    } else {
-      order = QUESTIONS.map((_, i) => i);
-    }
-    
-    const limit = Math.min(state.settings.questionLimit, TOTAL);
-    order = order.slice(0, limit);
-  }
-  
-  state.session = {
-    order,
-    pos: 0,
-    answers: {},
-    mode: state.settings.answerNow ? 'normal' : 'exam',
-    qShuffledOpts: {}
-  };
-  
-  timeRemaining = state.settings.testTimerMinutes * 60;
-  document.getElementById('timerText').textContent = fmtTime(timeRemaining);
-  document.getElementById('timerDisplay').classList.remove('warn');
-  
-  saveState();
-  startTimer();
-  renderAllQuestions();
-  updateStats();
-}
-
-function startTimer(){
-  clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    timeRemaining--;
-    if (timeRemaining < 0) timeRemaining = 0;
-    document.getElementById('timerText').textContent = fmtTime(timeRemaining);
-    document.getElementById('timerDisplay').classList.toggle('warn', timeRemaining <= 60);
-    if (timeRemaining <= 0) {
-      stopTimer();
-      renderResult();
-    }
-  }, 1000);
-}
-function stopTimer(){ clearInterval(timerInterval); }
-
-function escapeHtml(s){
-  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
 /* ============================================================
-   КАСТОМНЫЕ МОДАЛЬНЫЕ ОКНА (замена confirm/alert)
+   UI: МОДАЛЬНЫЕ ОКНА (КАСТОМНЫЕ, С ЗАДЕРЖКОЙ)
    ============================================================ */
-const ICON_INFO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
-const ICON_QUESTION = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
-const ICON_WARN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
-const ICON_DANGER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
-
 let _modalResolver = null;
 
-function _closeModal(result){
-  const ov = document.getElementById('uiModal');
-  ov.classList.remove('show');
-  if (_modalResolver) {
-    const r = _modalResolver;
-    _modalResolver = null;
-    r(result);
-  }
-}
-
-/**
- * options = { title, text, icon, okText, cancelText, danger }
- * Возвращает Promise<boolean>
- */
-function uiConfirm(opts){
+function openModal({ title, bodyHTML, buttons }) {
   return new Promise(resolve => {
-    const {
-      title = 'Подтвердите действие',
-      text = '',
-      icon = 'question',
-      okText = 'OK',
-      cancelText = 'Отмена',
-      danger = false,
-    } = opts || {};
-
-    const ov = document.getElementById('uiModal');
-    const iconEl = document.getElementById('uiModalIcon');
-    const titleEl = document.getElementById('uiModalTitle');
-    const textEl = document.getElementById('uiModalText');
-    const actionsEl = document.getElementById('uiModalActions');
-
-    iconEl.className = 'modal-icon';
-    if (icon === 'danger') iconEl.classList.add('danger');
-    else if (icon === 'warn') iconEl.classList.add('warn');
-
-    iconEl.innerHTML =
-      icon === 'danger' ? ICON_DANGER :
-      icon === 'warn'   ? ICON_WARN :
-      icon === 'info'   ? ICON_INFO : ICON_QUESTION;
-
-    titleEl.textContent = title;
-    textEl.textContent = text;
-    textEl.style.display = text ? 'block' : 'none';
-
+    const ov = $('uiModal');
+    $('uiModalTitle').textContent = title;
+    $('uiModalBody').innerHTML = bodyHTML;
+    const actionsEl = $('uiModalActions');
     actionsEl.innerHTML = '';
 
-    if (cancelText !== null){
-      const cancelBtn = document.createElement('button');
-      cancelBtn.className = 'btn btn-dark';
-      cancelBtn.textContent = cancelText;
-      cancelBtn.onclick = () => _closeModal(false);
-      actionsEl.appendChild(cancelBtn);
-    }
-
-    const okBtn = document.createElement('button');
-    okBtn.className = 'btn ' + (danger ? 'btn-danger' : 'btn-accent');
-    okBtn.textContent = okText;
-    okBtn.onclick = () => _closeModal(true);
-    actionsEl.appendChild(okBtn);
+    buttons.forEach(btnInfo => {
+      const btn = document.createElement('button');
+      btn.className = 'btn ' + (btnInfo.class || 'btn-dark');
+      btn.textContent = btnInfo.text;
+      if (btnInfo.id) btn.id = btnInfo.id;
+      btn.onclick = async () => {
+        if (btnInfo.onClick) {
+          const result = await btnInfo.onClick();
+          if (result !== false) closeModal();
+          if (result !== undefined && result !== false) resolve(result);
+        } else {
+          closeModal();
+          // Задержка нужна для мобильных браузеров, чтобы избежать багов с Promise
+          setTimeout(() => resolve(btnInfo.value), 50);
+        }
+      };
+      actionsEl.appendChild(btn);
+    });
 
     _modalResolver = resolve;
     ov.classList.add('show');
-
-    setTimeout(() => okBtn.focus(), 50);
   });
 }
 
-function uiAlert(opts){
-  return uiConfirm({
-    okText: 'OK',
-    cancelText: null,
-    icon: 'info',
-    ...opts
-  });
-}
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && document.getElementById('uiModal').classList.contains('show')){
-    _closeModal(false);
+function closeModal(result) {
+  const ov = $('uiModal');
+  ov.classList.remove('show');
+  if (_modalResolver) {
+    _modalResolver(result);
+    _modalResolver = null;
   }
-});
-document.getElementById('uiModal').addEventListener('click', e => {
-  if (e.target.id === 'uiModal') _closeModal(false);
-});
+}
 
-/* UI EVENTS */
-const overlay = document.getElementById('sidebarOverlay');
-const sidebar = document.getElementById('sidebar');
-function openSidebar() { overlay.classList.add('show'); sidebar.classList.add('show'); updateSidebarUI(); }
-function closeSidebar() { overlay.classList.remove('show'); sidebar.classList.remove('show'); }
-
-document.getElementById('openSettingsBtn').onclick = openSidebar;
-document.getElementById('closeSettingsBtn').onclick = closeSidebar;
-overlay.onclick = closeSidebar;
-
-const chkAnswerNow = document.getElementById('chkAnswerNow');
-const chkShuffleQ = document.getElementById('chkShuffleQ');
-const chkShuffleA = document.getElementById('chkShuffleA');
-const testTimerInput = document.getElementById('testTimerInput');
-const questionTimerInput = document.getElementById('questionTimerInput');
-const sideQCount = document.getElementById('sideQCount');
-const sideMaxQ = document.getElementById('sideMaxQ');
-
-function updateSidebarUI() {
-  chkAnswerNow.checked = state.settings.answerNow;
-  chkShuffleQ.checked = state.settings.shuffleQ;
-  chkShuffleA.checked = state.settings.shuffleA;
-  testTimerInput.value = state.settings.testTimerMinutes;
-  questionTimerInput.value = state.settings.questionTimerSec;
-  sideQCount.value = state.settings.questionLimit === TOTAL ? '' : state.settings.questionLimit;
-  sideMaxQ.textContent = TOTAL;
-
-  document.getElementById('btnToggleShuffleQ').textContent = state.settings.shuffleQ ? 'Отменить перемешивание вопросов' : 'Перемешать вопросы';
-  document.getElementById('btnToggleShuffleQ').className = state.settings.shuffleQ ? 'btn btn-active-toggle' : 'btn btn-dark';
-  
-  document.getElementById('btnToggleShuffleA').textContent = state.settings.shuffleA ? 'Отменить перемешивание ответов' : 'Перемешать варианты';
-  document.getElementById('btnToggleShuffleA').className = state.settings.shuffleA ? 'btn btn-active-toggle' : 'btn btn-dark';
-
-  document.querySelectorAll('[data-limit]').forEach(btn => {
-    btn.classList.remove('btn-active-toggle');
-    btn.classList.add('btn-dark');
+function uiConfirm(title, text, okText = 'Да', danger = false) {
+  return openModal({
+    title,
+    bodyHTML: `<div style="font-size:14px; color:var(--muted); line-height:1.4;">${esc(text)}</div>`,
+    buttons: [
+      { text: 'Отмена', class: 'btn-dark', value: false },
+      { text: okText, class: danger ? 'btn-danger' : 'btn-accent', value: true }
+    ]
   });
-  if (state.settings.questionLimit === TOTAL) {
-    const allBtn = document.querySelector('[data-limit="all"]');
-    if (allBtn) { allBtn.classList.remove('btn-dark'); allBtn.classList.add('btn-active-toggle'); }
-  } else {
-    const match = document.querySelector(`[data-limit="${state.settings.questionLimit}"]`);
-    if (match) {
-      match.classList.remove('btn-dark');
-      match.classList.add('btn-active-toggle');
+}
+
+function uiAlert(title, text) {
+  return openModal({
+    title,
+    bodyHTML: `<div style="font-size:14px; color:var(--muted); line-height:1.4;">${esc(text)}</div>`,
+    buttons: [
+      { text: 'OK', class: 'btn-accent', value: true }
+    ]
+  });
+}
+
+/* ============================================================
+   UI: ВЫПАДАЮЩИЕ СПИСКИ
+   ============================================================ */
+const selUniversity = $('selUniversity');
+const selFaculty = $('selFaculty');
+const selCourse = $('selCourse');
+const selSubject = $('selSubject');
+
+function fillSelect(sel, items, placeholder) {
+  sel.innerHTML = `<option value="">${placeholder}</option>` +
+    items.map((item, i) => `<option value="${i}">${esc(item.name)}</option>`).join('');
+}
+
+function refreshSelects() {
+  fillSelect(selUniversity, DATA.universities, '— Выберите ВУЗ —');
+  selUniversity.dispatchEvent(new Event('change'));
+}
+
+selUniversity.onchange = () => {
+  $('selFaculty').innerHTML = `<option value="">— Выберите Факультет —</option>`;
+  $('selFaculty').disabled = true;
+  $('addFacultyBtn').disabled = true;
+  $('selCourse').innerHTML = `<option value="">— Выберите Курс —</option>`;
+  $('selCourse').disabled = true;
+  $('addCourseBtn').disabled = true;
+  $('selSubject').innerHTML = `<option value="">— Выберите Предмет —</option>`;
+  $('selSubject').disabled = true;
+  $('addSubjectBtn').disabled = true;
+
+  const u = DATA.universities[Number(selUniversity.value)];
+  if (u) {
+    $('addFacultyBtn').disabled = false;
+    if (u.faculties && u.faculties.length) {
+      fillSelect(selFaculty, u.faculties, '— Выберите Факультет —');
+      selFaculty.disabled = false;
     }
   }
-}
-
-chkAnswerNow.onchange = (e) => { state.settings.answerNow = e.target.checked; saveState(); renderNavGrid(); };
-chkShuffleQ.onchange = (e) => { 
-  state.settings.shuffleQ = e.target.checked; 
-  if (!state.settings.shuffleQ) state.settings.frozenOrder = null;
-  saveState(); updateSidebarUI(); 
-};
-chkShuffleA.onchange = (e) => { state.settings.shuffleA = e.target.checked; saveState(); updateSidebarUI(); };
-testTimerInput.onchange = (e) => { state.settings.testTimerMinutes = Number(e.target.value) || 15; saveState(); };
-questionTimerInput.onchange = (e) => { 
-  state.settings.questionTimerSec = Math.max(0, Number(e.target.value) || 0); 
-  saveState(); 
 };
 
-sideQCount.onchange = (e) => {
-  let val = Number(e.target.value);
-  if (!val || val < 1) val = TOTAL;
-  if (val > TOTAL) val = TOTAL;
-  state.settings.questionLimit = val;
-  e.target.value = val === TOTAL ? '' : val;
-  saveState();
-  updateSidebarUI();
-};
+selFaculty.onchange = () => {
+  $('selCourse').innerHTML = `<option value="">— Выберите Курс —</option>`;
+  $('selCourse').disabled = true;
+  $('addCourseBtn').disabled = true;
+  $('selSubject').innerHTML = `<option value="">— Выберите Предмет —</option>`;
+  $('selSubject').disabled = true;
+  $('addSubjectBtn').disabled = true;
 
-document.querySelectorAll('[data-limit]').forEach(btn => {
-  btn.onclick = () => {
-    const val = btn.dataset.limit;
-    if (val === 'all') state.settings.questionLimit = TOTAL;
-    else state.settings.questionLimit = Number(val);
-    saveState();
-    updateSidebarUI();
-  };
-});
-
-document.getElementById('btnStartTimer').onclick = () => { timeRemaining = state.settings.testTimerMinutes * 60; startTimer(); closeSidebar(); };
-document.getElementById('btnStopTimer').onclick = stopTimer;
-document.getElementById('btnResetTimer').onclick = () => {
-  stopTimer();
-  timeRemaining = state.settings.testTimerMinutes * 60;
-  document.getElementById('timerText').textContent = fmtTime(timeRemaining);
-  document.getElementById('timerDisplay').classList.remove('warn');
-};
-
-document.getElementById('btnRestart').onclick = async () => {
-  const ok = await uiConfirm({
-    title: 'Начать тест заново?',
-    text: 'Текущий прогресс будет сброшен. Продолжить?',
-    icon: 'warn',
-    okText: 'Начать заново',
-    cancelText: 'Отмена',
-  });
-  if (ok) {
-    startSession();
-    closeSidebar();
+  const u = DATA.universities[Number(selUniversity.value)];
+  const f = u && u.faculties ? u.faculties[Number(selFaculty.value)] : null;
+  if (f) {
+    $('addCourseBtn').disabled = false;
+    if (f.courses && f.courses.length) {
+      fillSelect(selCourse, f.courses, '— Выберите Курс —');
+      selCourse.disabled = false;
+    }
   }
 };
 
-document.getElementById('btnToggleShuffleQ').onclick = () => {
-  state.settings.shuffleQ = !state.settings.shuffleQ;
-  if (!state.settings.shuffleQ) state.settings.frozenOrder = null;
-  saveState();
-  updateSidebarUI();
-  startSession(); 
+selCourse.onchange = () => {
+  $('selSubject').innerHTML = `<option value="">— Выберите Предмет —</option>`;
+  $('selSubject').disabled = true;
+  $('addSubjectBtn').disabled = true;
+
+  const u = DATA.universities[Number(selUniversity.value)];
+  const f = u && u.faculties ? u.faculties[Number(selFaculty.value)] : null;
+  const c = f && f.courses ? f.courses[Number(selCourse.value)] : null;
+  if (c) {
+    $('addSubjectBtn').disabled = false;
+    if (c.subjects && c.subjects.length) {
+      fillSelect(selSubject, c.subjects, '— Выберите Предмет —');
+      selSubject.disabled = false;
+    }
+  }
 };
 
-document.getElementById('btnToggleShuffleA').onclick = () => {
-  state.settings.shuffleA = !state.settings.shuffleA;
-  saveState();
-  updateSidebarUI();
-  startSession(); 
-};
-
-document.getElementById('btnReshuffle').onclick = () => {
-  state.settings.frozenOrder = null;
-  saveState();
-  startSession();
-  closeSidebar();
-};
-
-document.getElementById('btnOnlyFav').onclick = async () => {
-  const favs = Object.keys(state.favorites).map(Number);
-  if (!favs.length) {
-    await uiAlert({
-      title: 'Избранных нет',
-      text: 'Добавьте вопросы в избранное, нажимая на ⭐ в карточке вопроса.',
-      icon: 'info',
-      okText: 'Понятно',
-    });
+/* ============================================================
+   UI: ДЕРЕВО (ХЛЕБНЫЕ КРОШКИ)
+   ============================================================ */
+function renderTree() {
+  const box = $('treeBox');
+  
+  if (!DATA.universities.length) {
+    box.innerHTML = `<div class="hint" style="text-align:center;">Пока нет ни одного ВУЗа</div>`;
     return;
   }
-  startSession(favs);
-  closeSidebar();
-};
 
-document.getElementById('btnFinishSidebar').onclick = async () => {
-  const ok = await uiConfirm({
-    title: 'Завершить тест досрочно?',
-    text: 'Неотвеченные вопросы будут засчитаны как неверные.',
-    icon: 'danger',
-    okText: 'Завершить',
-    cancelText: 'Отмена',
-    danger: true,
-  });
-  if (ok) {
-    closeSidebar();
-    if (state.session) renderResult();
+  let crumbsHTML = '';
+  const u = currentPath.ui !== null ? DATA.universities[currentPath.ui] : null;
+  const f = u && currentPath.fi !== null ? u.faculties[currentPath.fi] : null;
+  const c = f && currentPath.ci !== null ? f.courses[currentPath.ci] : null;
+  const s = c && currentPath.si !== null ? c.subjects[currentPath.si] : null;
+
+  crumbsHTML += `<span class="crumb" data-nav="root">Главная</span>`;
+  if (u) crumbsHTML += ` <span class="sep">></span> <span class="crumb" data-nav="uni">${esc(u.name)}</span>`;
+  if (f) crumbsHTML += ` <span class="sep">></span> <span class="crumb" data-nav="fac">${esc(f.name)}</span>`;
+  if (c) crumbsHTML += ` <span class="sep">></span> <span class="crumb" data-nav="course">${esc(c.name)}</span>`;
+  if (s) crumbsHTML += ` <span class="sep">></span> <span class="crumb" data-nav="subj">${esc(s.name)}</span>`;
+
+  let contentHTML = '';
+
+  function btnActions(editData, delData, isDanger = false) {
+    const editAttrs = Object.entries(editData).map(([k,v]) => `data-edit-${k}="${v}"`).join(' ');
+    const delAttrs = Object.entries(delData).map(([k,v]) => `data-del-${k}="${v}"`).join(' ');
+    return `
+      <div class="nav-row-actions">
+        <button class="btn btn-dark" ${editAttrs}>${ICONS.edit}</button>
+        <button class="btn ${isDanger ? 'btn-danger' : 'btn-dark'}" ${delAttrs}>${ICONS.trash}</button>
+      </div>
+    `;
   }
-};
 
-document.getElementById('btnClearFav').onclick = async () => {
-  const ok = await uiConfirm({
-    title: 'Очистить избранное?',
-    text: 'Все отмеченные вопросы будут удалены из избранного.',
-    icon: 'warn',
-    okText: 'Очистить',
-    cancelText: 'Отмена',
-  });
-  if (ok) {
-    state.favorites = {};
-    saveState(); updateStats(); closeSidebar();
-  }
-};
-
-/* ---------- INIT ---------- */
-updateStats();
-
-(async function initApp(){
-  if (state.session && state.session.order && state.session.order.length) {
-    const answeredCount = Object.keys(state.session.answers || {}).length;
-    if (answeredCount > 0) {
-      const ok = await uiConfirm({
-        title: 'Продолжить тест?',
-        text: `Найден незавершённый тест: вопрос ${state.session.pos + 1} из ${state.session.order.length}, отвечено ${answeredCount}.`,
-        icon: 'question',
-        okText: 'Продолжить',
-        cancelText: 'Начать заново',
-      });
-      if (ok) {
-        document.getElementById('timerText').textContent = fmtTime(timeRemaining);
-        startTimer();
-        renderAllQuestions();
-        updateStats();
-      } else {
-        state.session = null;
-        saveState();
-        startSession();
-      }
-    } else {
-      document.getElementById('timerText').textContent = fmtTime(timeRemaining);
-      startTimer();
-      renderAllQuestions();
-      updateStats();
-    }
+  if (!u) {
+    contentHTML = DATA.universities.map((uni, idx) => `
+      <div class="nav-row" data-nav="uni" data-idx="${idx}">
+        <div class="nav-row-title">
+          ${ICONS.uni} ${esc(uni.name)} <div class="nav-arrow"></div>
+        </div>
+        ${btnActions({ type: 'university', ui: idx }, { type: 'university', ui: idx })}
+      </div>
+    `).join('');
+  } else if (!f) {
+    contentHTML = (u.faculties || []).length === 0 
+      ? '<div class="hint" style="text-align:center; padding: 10px;">Нет факультетов</div>'
+      : u.faculties.map((fac, idx) => `
+        <div class="nav-row" data-nav="fac" data-idx="${idx}">
+          <div class="nav-row-title">
+            ${ICONS.fac} ${esc(fac.name)} <div class="nav-arrow"></div>
+          </div>
+          ${btnActions({ type: 'faculty', ui: currentPath.ui, fi: idx }, { type: 'faculty', ui: currentPath.ui, fi: idx })}
+        </div>
+      `).join('');
+  } else if (!c) {
+    contentHTML = (f.courses || []).length === 0 
+      ? '<div class="hint" style="text-align:center; padding: 10px;">Нет курсов</div>'
+      : f.courses.map((course, idx) => `
+        <div class="nav-row" data-nav="course" data-idx="${idx}">
+          <div class="nav-row-title">
+            ${ICONS.course} ${esc(course.name)} <div class="nav-arrow"></div>
+          </div>
+          ${btnActions({ type: 'course', ui: currentPath.ui, fi: currentPath.fi, ci: idx }, { type: 'course', ui: currentPath.ui, fi: currentPath.fi, ci: idx })}
+        </div>
+      `).join('');
+  } else if (!s) {
+    contentHTML = (c.subjects || []).length === 0 
+      ? '<div class="hint" style="text-align:center; padding: 10px;">Нет предметов</div>'
+      : c.subjects.map((subj, idx) => `
+        <div class="nav-row" data-nav="subj" data-idx="${idx}">
+          <div class="nav-row-title">
+            ${ICONS.subj} ${esc(subj.name)} <div class="nav-arrow"></div>
+          </div>
+          ${btnActions({ type: 'subject', ui: currentPath.ui, fi: currentPath.fi, ci: currentPath.ci, si: idx }, { type: 'subject', ui: currentPath.ui, fi: currentPath.fi, ci: currentPath.ci, si: idx })}
+        </div>
+      `).join('');
   } else {
-    startSession();
+    contentHTML = (s.tests || []).length === 0 
+      ? '<div class="hint" style="text-align:center; padding: 10px;">Нет тестов</div>'
+      : s.tests.map((test, idx) => `
+        <div class="test-item">
+          <div class="test-item-info">
+            <div class="test-item-title">${ICONS.file} ${esc(test.title)}</div>
+            <div class="meta">Вопросов: ${parseRaw((Array.isArray(test.raw) ? test.raw : [test.raw || '']).join('\n')).length}</div>
+          </div>
+          <div class="nav-row-actions">
+            <button class="btn btn-dark" data-edit-test="${idx}">${ICONS.edit}</button>
+            <button class="btn btn-danger" data-del-test="${idx}">${ICONS.trash}</button>
+          </div>
+        </div>
+      `).join('');
   }
+
+  box.innerHTML = `
+    <div class="breadcrumbs">${crumbsHTML}</div>
+    ${contentHTML}
+  `;
+
+  box.querySelectorAll('.crumb').forEach(el => {
+    el.addEventListener('click', () => goBack(el.dataset.nav));
+  });
+
+  box.querySelectorAll('.nav-row[data-nav]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.nav-row-actions')) return;
+      navigate(el.dataset.nav, Number(el.dataset.idx));
+    });
+  });
+
+  box.querySelectorAll('[data-edit-type]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const t = btn.dataset.editType;
+      if (t === 'university') editName('university', Number(btn.dataset.editUi));
+      if (t === 'faculty') editName('faculty', Number(btn.dataset.editUi), Number(btn.dataset.editFi));
+      if (t === 'course') editName('course', Number(btn.dataset.editUi), Number(btn.dataset.editFi), Number(btn.dataset.editCi));
+      if (t === 'subject') editName('subject', Number(btn.dataset.editUi), Number(btn.dataset.editFi), Number(btn.dataset.editCi), Number(btn.dataset.editSi));
+    });
+  });
+
+  box.querySelectorAll('[data-del-type]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const t = btn.dataset.delType;
+      if (t === 'university') deleteUniversity(Number(btn.dataset.delUi));
+      if (t === 'faculty') deleteFaculty(Number(btn.dataset.delUi), Number(btn.dataset.delFi));
+      if (t === 'course') deleteCourse(Number(btn.dataset.delUi), Number(btn.dataset.delFi), Number(btn.dataset.delCi));
+      if (t === 'subject') deleteSubject(Number(btn.dataset.delUi), Number(btn.dataset.delFi), Number(btn.dataset.delCi), Number(btn.dataset.delSi));
+    });
+  });
+
+  box.querySelectorAll('[data-edit-test]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      editTest(currentPath.ui, currentPath.fi, currentPath.ci, currentPath.si, Number(btn.dataset.editTest));
+    });
+  });
+  box.querySelectorAll('[data-del-test]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteTest(currentPath.ui, currentPath.fi, currentPath.ci, currentPath.si, Number(btn.dataset.delTest));
+    });
+  });
+}
+
+function navigate(level, index) {
+  if (level === 'uni') { currentPath.ui = index; currentPath.fi = null; currentPath.ci = null; currentPath.si = null; }
+  if (level === 'fac') { currentPath.fi = index; currentPath.ci = null; currentPath.si = null; }
+  if (level === 'course') { currentPath.ci = index; currentPath.si = null; }
+  if (level === 'subj') { currentPath.si = index; }
+  renderTree();
+}
+
+function goBack(level) {
+  if (level === 'root') { currentPath = { ui: null, fi: null, ci: null, si: null }; }
+  if (level === 'uni') { currentPath.fi = null; currentPath.ci = null; currentPath.si = null; }
+  if (level === 'fac') { currentPath.ci = null; currentPath.si = null; }
+  if (level === 'course') { currentPath.si = null; }
+  renderTree();
+}
+
+/* ============================================================
+   РЕДАКТИРОВАНИЕ ИМЕН
+   ============================================================ */
+function editName(type, ui, fi, ci, si) {
+  let currentName = '';
+  let title = '';
+  let onSave = null;
+
+  if (type === 'university') {
+    currentName = DATA.universities[ui].name;
+    title = 'Редактировать ВУЗ';
+    onSave = (newName) => { DATA.universities[ui].name = newName; };
+  } else if (type === 'faculty') {
+    currentName = DATA.universities[ui].faculties[fi].name;
+    title = 'Редактировать Факультет';
+    onSave = (newName) => { DATA.universities[ui].faculties[fi].name = newName; };
+  } else if (type === 'course') {
+    currentName = DATA.universities[ui].faculties[fi].courses[ci].name;
+    title = 'Редактировать Курс';
+    onSave = (newName) => { DATA.universities[ui].faculties[fi].courses[ci].name = newName; };
+  } else if (type === 'subject') {
+    currentName = DATA.universities[ui].faculties[fi].courses[ci].subjects[si].name;
+    title = 'Редактировать Предмет';
+    onSave = (newName) => { DATA.universities[ui].faculties[fi].courses[ci].subjects[si].name = newName; };
+  }
+
+  openModal({
+    title: title,
+    bodyHTML: `<input type="text" class="setting-input" id="editNameInput" value="${esc(currentName)}" style="margin-bottom:0;">`,
+    buttons: [
+      { text: 'Отмена', class: 'btn-dark', value: false },
+      {
+        text: 'Сохранить', class: 'btn-accent',
+        onClick: async () => {
+          const newName = $('editNameInput').value.trim();
+          if (!newName) { await uiAlert('Ошибка', 'Имя не может быть пустым'); return false; }
+          
+          const btn = $('uiModalActions').lastChild;
+          btn.textContent = 'Сохранение...';
+          btn.disabled = true;
+          try {
+            onSave(newName);
+            await saveData();
+            renderTree();
+            refreshSelects();
+            return true; 
+          } catch(e) {
+            await uiAlert('Ошибка', e.message);
+            btn.textContent = 'Сохранить';
+            btn.disabled = false;
+            return false;
+          }
+        }
+      }
+    ]
+  });
+}
+
+/* ============================================================
+   РЕДАКТИРОВАНИЕ ТЕСТА (RAW)
+   ============================================================ */
+function editTest(ui, fi, ci, si, ti) {
+  const test = DATA.universities[ui].faculties[fi].courses[ci].subjects[si].tests[ti];
+  
+  openModal({
+    title: 'Редактировать зачёт',
+    bodyHTML: `
+      <label>Название</label>
+      <input type="text" class="setting-input" id="editTestTitle" value="${esc(test.title)}">
+      <label>Вопросы (RAW)</label>
+      <textarea id="editTestRaw" style="min-height:250px;">${esc((Array.isArray(test.raw) ? test.raw : [test.raw || '']).join('\n'))}</textarea>
+    `,
+    buttons: [
+      { text: 'Отмена', class: 'btn-dark', value: false },
+      {
+        text: 'Сохранить', class: 'btn-accent',
+        onClick: async () => {
+          const newTitle = $('editTestTitle').value.trim();
+          const newRaw = $('editTestRaw').value.trim();
+          
+          if (!newTitle || !newRaw) { await uiAlert('Ошибка', 'Заполните все поля'); return false; }
+          const qs = parseRaw(newRaw);
+          if (!qs.length) { await uiAlert('Ошибка', 'Не найдено вопросов'); return false; }
+          const noCorrect = qs.filter(q => q.correct === -1).length;
+          if (noCorrect > 0) { await uiAlert('Ошибка', 'Есть вопросы без правильного ответа (+)'); return false; }
+
+          const btn = $('uiModalActions').lastChild;
+          btn.textContent = 'Сохранение...';
+          btn.disabled = true;
+          try {
+            test.title = newTitle;
+            test.raw = newRaw.split('\n');
+            await saveData();
+            renderTree();
+            return true;
+          } catch(e) {
+            await uiAlert('Ошибка', e.message);
+            btn.textContent = 'Сохранить';
+            btn.disabled = false;
+            return false;
+          }
+        }
+      }
+    ]
+  });
+}
+
+/* ============================================================
+   УДАЛЕНИЕ (КАСТОМНЫЙ CONFIRM + СПИННЕР)
+   ============================================================ */
+async function deleteUniversity(ui) {
+  const ok = await uiConfirm('Удаление', `Удалить ВУЗ «${DATA.universities[ui].name}» и всё его содержимое?`, 'Удалить', true);
+  if (!ok) return;
+  DATA.universities.splice(ui, 1);
+  try {
+    await saveData();
+    currentPath = { ui: null, fi: null, ci: null, si: null };
+    renderTree();
+    refreshSelects();
+  } catch(e) {
+    await uiAlert('Не удалось сохранить', e.message);
+    DATA = await loadData();
+    renderTree();
+  }
+}
+
+async function deleteFaculty(ui, fi) {
+  const ok = await uiConfirm('Удаление', 'Удалить факультет и всё его содержимое?', 'Удалить', true);
+  if (!ok) return;
+  DATA.universities[ui].faculties.splice(fi, 1);
+  try {
+    await saveData();
+    currentPath.fi = null; currentPath.ci = null; currentPath.si = null;
+    renderTree();
+    refreshSelects();
+  } catch(e) {
+    await uiAlert('Не удалось сохранить', e.message);
+    DATA = await loadData();
+    renderTree();
+  }
+}
+
+async function deleteCourse(ui, fi, ci) {
+  const ok = await uiConfirm('Удаление', 'Удалить курс и всё его содержимое?', 'Удалить', true);
+  if (!ok) return;
+  DATA.universities[ui].faculties[fi].courses.splice(ci, 1);
+  try {
+    await saveData();
+    currentPath.ci = null; currentPath.si = null;
+    renderTree();
+    refreshSelects();
+  } catch(e) {
+    await uiAlert('Не удалось сохранить', e.message);
+    DATA = await loadData();
+    renderTree();
+  }
+}
+
+async function deleteSubject(ui, fi, ci, si) {
+  const ok = await uiConfirm('Удаление', 'Удалить предмет и всё его содержимое?', 'Удалить', true);
+  if (!ok) return;
+  DATA.universities[ui].faculties[fi].courses[ci].subjects.splice(si, 1);
+  try {
+    await saveData();
+    currentPath.si = null;
+    renderTree();
+    refreshSelects();
+  } catch(e) {
+    await uiAlert('Не удалось сохранить', e.message);
+    DATA = await loadData();
+    renderTree();
+  }
+}
+
+async function deleteTest(ui, fi, ci, si, ti) {
+  const ok = await uiConfirm('Удаление', 'Удалить зачёт?', 'Удалить', true);
+  if (!ok) return;
+  DATA.universities[ui].faculties[fi].courses[ci].subjects[si].tests.splice(ti, 1);
+  try {
+    await saveData();
+    renderTree();
+    refreshSelects();
+  } catch(e) {
+    await uiAlert('Не удалось сохранить', e.message);
+    DATA = await loadData();
+    renderTree();
+  }
+}
+
+/* ============================================================
+   ДОБАВЛЕНИЕ
+   ============================================================ */
+$('saveSettingsBtn').onclick = () => {
+  cfg.token = $('tokenInput').value.trim();
+  cfg.repo = $('repoInput').value.trim();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
+  connect();
+};
+
+$('logoutBtn').onclick = async () => {
+  const ok = await uiConfirm('Выход', 'Стереть токен?', 'Стереть', true);
+  if (!ok) return;
+  cfg = { token: '', repo: '' };
+  localStorage.removeItem(STORAGE_KEY);
+  $('tokenInput').value = '';
+  $('repoInput').value = '';
+  $('connStatus').textContent = 'Не подключено';
+  $('connStatus').className = 'status offline';
+  $('settingsCard').classList.remove('hidden');
+  ['titleCard','addCard','listCard'].forEach(id => $(id).classList.add('hidden'));
+};
+
+$('saveTitleBtn').onclick = async () => {
+  const msg = $('titleMsg');
+  const newTitle = $('siteTitleInput').value.trim();
+  if (!newTitle) return showMsg(msg, 'Введи название', false);
+  try {
+    DATA.siteTitle = newTitle;
+    await saveData();
+    showMsg(msg, 'Название сохранено', true);
+  } catch(e) {
+    showMsg(msg, e.message, false);
+  }
+};
+
+$('addUniversityBtn').onclick = async () => {
+  const name = $('newUniversityName').value.trim();
+  if (!name) return uiAlert('Ошибка', 'Введите название ВУЗа');
+  if (DATA.universities.some(u => u.name.toLowerCase() === name.toLowerCase())) return uiAlert('Ошибка', 'Такой ВУЗ уже есть');
+  DATA.universities.push({ name, faculties: [] });
+  await saveData();
+  $('newUniversityName').value = '';
+  renderTree();
+  refreshSelects();
+};
+
+$('addFacultyBtn').onclick = async () => {
+  const name = $('newFacultyName').value.trim();
+  const ui = Number(selUniversity.value);
+  if (!name) return uiAlert('Ошибка', 'Введите название Факультета');
+  if (isNaN(ui) || !DATA.universities[ui]) return uiAlert('Ошибка', 'Сначала выберите ВУЗ');
+  if (!DATA.universities[ui].faculties) DATA.universities[ui].faculties = [];
+  if (DATA.universities[ui].faculties.some(f => f.name.toLowerCase() === name.toLowerCase())) return uiAlert('Ошибка', 'Такой факультет уже есть');
+  DATA.universities[ui].faculties.push({ name, courses: [] });
+  await saveData();
+  $('newFacultyName').value = '';
+  renderTree();
+  refreshSelects();
+  selUniversity.value = ui;
+  selUniversity.dispatchEvent(new Event('change'));
+};
+
+$('addCourseBtn').onclick = async () => {
+  const name = $('newCourseName').value.trim();
+  const ui = Number(selUniversity.value);
+  const fi = Number(selFaculty.value);
+  if (!name) return uiAlert('Ошибка', 'Введите название Курса');
+  if (isNaN(ui) || isNaN(fi)) return uiAlert('Ошибка', 'Выберите ВУЗ и Факультет');
+  const f = DATA.universities[ui].faculties[fi];
+  if (!f.courses) f.courses = [];
+  if (f.courses.some(c => c.name.toLowerCase() === name.toLowerCase())) return uiAlert('Ошибка', 'Такой курс уже есть');
+  f.courses.push({ name, subjects: [] });
+  await saveData();
+  $('newCourseName').value = '';
+  renderTree();
+  refreshSelects();
+  selUniversity.value = ui; selUniversity.dispatchEvent(new Event('change'));
+  selFaculty.value = fi; selFaculty.dispatchEvent(new Event('change'));
+};
+
+$('addSubjectBtn').onclick = async () => {
+  const name = $('newSubjectName').value.trim();
+  const ui = Number(selUniversity.value);
+  const fi = Number(selFaculty.value);
+  const ci = Number(selCourse.value);
+  if (!name) return uiAlert('Ошибка', 'Введите название Предмета');
+  if (isNaN(ui) || isNaN(fi) || isNaN(ci)) return uiAlert('Ошибка', 'Выберите ВУЗ, Факультет и Курс');
+  const c = DATA.universities[ui].faculties[fi].courses[ci];
+  if (!c.subjects) c.subjects = [];
+  if (c.subjects.some(s => s.name.toLowerCase() === name.toLowerCase())) return uiAlert('Ошибка', 'Такой предмет уже есть');
+  c.subjects.push({ name, tests: [] });
+  await saveData();
+  $('newSubjectName').value = '';
+  renderTree();
+  refreshSelects();
+  selUniversity.value = ui; selUniversity.dispatchEvent(new Event('change'));
+  selFaculty.value = fi; selFaculty.dispatchEvent(new Event('change'));
+  selCourse.value = ci; selCourse.dispatchEvent(new Event('change'));
+};
+
+$('previewBtn').onclick = () => {
+  const msg = $('addMsg');
+  try {
+    const rawText = $('newTestRaw').value.trim();
+    if (!rawText) throw new Error('Текст пуст');
+    const qs = parseRaw(rawText);
+    if (!qs.length) throw new Error('Не найдено вопросов');
+    const noCorrect = qs.filter(q => q.correct === -1).length;
+    if (noCorrect > 0) showMsg(msg, `Вопросов: ${qs.length}. Без правильного ответа: ${noCorrect}`, false);
+    else showMsg(msg, `Вопросов: ${qs.length}. Все с ответами.`, true);
+  } catch(e) {
+    showMsg(msg, e.message, false);
+  }
+};
+
+$('newTestRaw').oninput = () => {
+  const rawText = $('newTestRaw').value.trim();
+  const msg = $('liveValidationMsg');
+  if (!rawText) { msg.className = 'status-msg'; return; }
+  const qs = parseRaw(rawText);
+  const noCorrect = qs.filter(q => q.correct === -1).length;
+  if (noCorrect > 0) {
+    msg.innerHTML = ICONS.err + `<span>Найдено вопросов: ${qs.length}. Без ответа: ${noCorrect}</span>`;
+    msg.className = 'status-msg err';
+  } else if (qs.length > 0) {
+    msg.innerHTML = ICONS.ok + `<span>Найдено вопросов: ${qs.length}. Всё ок.</span>`;
+    msg.className = 'status-msg ok';
+  }
+};
+
+$('addTestBtn').onclick = async () => {
+  const msg = $('addMsg');
+  const title = $('newTestTitle').value.trim();
+  const rawText = $('newTestRaw').value.trim();
+
+  const ui = Number(selUniversity.value);
+  const fi = Number(selFaculty.value);
+  const ci = Number(selCourse.value);
+  const si = Number(selSubject.value);
+
+  if (!title) return showMsg(msg, 'Введите название зачёта', false);
+  if (!rawText) return showMsg(msg, 'Введите вопросы', false);
+  if (isNaN(ui) || isNaN(fi) || isNaN(ci) || isNaN(si)) return showMsg(msg, 'Выберите путь до Предмета', false);
+
+  const qs = parseRaw(rawText);
+  if (!qs.length) return showMsg(msg, 'Не удалось распознать ни одного вопроса', false);
+  const noCorrect = qs.filter(q => q.correct === -1).length;
+  if (noCorrect > 0) return showMsg(msg, 'Ошибка: есть вопросы без правильного ответа (+)', false);
+
+  const subj = DATA.universities[ui].faculties[fi].courses[ci].subjects[si];
+  if (!subj.tests) subj.tests = [];
+  if (subj.tests.some(t => t.title.toLowerCase() === title.toLowerCase())) return showMsg(msg, 'Зачёт с таким названием уже есть', false);
+
+  const btn = $('addTestBtn');
+  btn.textContent = 'Сохранение...';
+  btn.disabled = true;
+
+  try {
+    subj.tests.push({
+      id: uid('test'),
+      title,
+      raw: rawText.split('\n')
+    });
+    await saveData();
+    renderTree();
+    $('newTestTitle').value = '';
+    $('newTestRaw').value = '';
+    $('liveValidationMsg').className = 'status-msg';
+    showMsg(msg, 'Зачёт сохранён в GitHub', true);
+  } catch(e) {
+    showMsg(msg, e.message, false);
+  } finally {
+    btn.textContent = 'Сохранить в GitHub';
+    btn.disabled = false;
+  }
+};
+
+$('reloadBtn').onclick = async () => {
+  try {
+    DATA = await loadData();
+    $('siteTitleInput').value = DATA.siteTitle;
+    currentPath = { ui: null, fi: null, ci: null, si: null };
+    renderTree();
+    refreshSelects();
+  } catch(e) {
+    uiAlert('Ошибка', e.message);
+  }
+};
+
+/* ============================================================
+   СКАЧИВАНИЕ JSON
+   ============================================================ */
+$('downloadJsonBtn').onclick = () => {
+  const jsonStr = JSON.stringify(DATA, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `tests_backup_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+/* ============================================================
+   ПОДКЛЮЧЕНИЕ
+   ============================================================ */
+async function connect() {
+  const msg = $('settingsMsg');
+  if (!cfg.token || !cfg.repo) return showMsg(msg, 'Заполни поля', false);
+  $('connStatus').textContent = 'Подключение...';
+  showLoading('Загрузка данных...');
+  try {
+    DATA = await loadData();
+    $('connStatus').textContent = 'Онлайн';
+    $('connStatus').className = 'status online';
+    $('settingsCard').classList.add('hidden');
+    ['titleCard','addCard','listCard'].forEach(id => $(id).classList.remove('hidden'));
+    $('siteTitleInput').value = DATA.siteTitle;
+    refreshSelects();
+    renderTree();
+  } catch(e) {
+    $('connStatus').textContent = 'Ошибка';
+    $('connStatus').className = 'status offline';
+    showMsg(msg, e.message, false);
+  } finally {
+    hideLoading();
+  }
+}
+
+/* ============================================================
+   СТАРТ
+   ============================================================ */
+(function init() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      cfg.token = saved.token || '';
+      cfg.repo = saved.repo || '';
+    }
+  } catch(e) {}
+  $('tokenInput').value = cfg.token;
+  $('repoInput').value = cfg.repo;
+  if (cfg.token && cfg.repo) connect();
 })();
 </script>
 </body>
